@@ -1,0 +1,284 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>mAIgicly — Choose Your Guardian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Prefetch chamber pages and scripts so BEGIN RESTORATION navigates instantly -->
+  <link rel="prefetch" href="/chambers/refrax.html">
+  <link rel="prefetch" href="/chambers/magnetica.html">
+  <link rel="prefetch" href="/chambers/chrona.html">
+  <link rel="prefetch" href="/chambers/violetflicker.html">
+  <link rel="prefetch" href="/chambers/refrax.js?v=4">
+  <link rel="prefetch" href="/chambers/magnetica.js">
+  <link rel="prefetch" href="/chambers/chrona.js">
+  <link rel="prefetch" href="/chambers/violetflicker.js">
+  <link rel="prefetch" href="/js/global-points.js?v=2">
+  <link rel="prefetch" href="/js/analytics.js?v=3">
+  <link rel="prefetch" href="/js/chamber-completion.js?v=1">
+  <link rel="prefetch" href="/js/star-rating.js">
+  <link rel="prefetch" href="/js/continuum-unlock.js">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --refrax: #7dd3fc;
+      --magnetica: #f87171;
+      --chrona: #fbbf24;
+      --violet: #c084fc;
+      --dark: #05050f;
+      --card-h: 460px;
+    }
+    body { background: linear-gradient(to bottom, #06091a 0%, #07090f 55%, #050508 100%); color: #f0ebe0; font-family: 'Rajdhani', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    .top-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 24px; background: linear-gradient(to bottom, rgba(5,5,15,0.9) 0%, transparent 100%); }
+    .nav-home { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; letter-spacing: 0.18em; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s; }
+    .nav-home:hover { color: rgba(255,255,255,0.75); }
+    .nav-right { display: flex; gap: 12px; }
+    .nav-link { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.35); text-decoration: none; border: 0.5px solid rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 4px; transition: all 0.2s; }
+    .nav-link:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+    .hero { text-align: center; padding: 100px 24px 48px; position: relative; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 600px; height: 300px; background: radial-gradient(ellipse, rgba(125,211,252,0.04) 0%, transparent 70%); pointer-events: none; }
+    .hero-statement {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+}
+
+.hero-arc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.3rem);
+  color: rgba(255,255,255,0.8);
+  line-height: 1.7;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  max-width: 700px;
+  margin: 0 auto;
+}
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+    .card-scene { height: var(--card-h); perspective: 1200px; cursor: pointer; }
+    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.75s cubic-bezier(0.4, 0.15, 0.2, 1); }
+    .card-scene.flipped .card-inner { transform: rotateY(180deg); }
+    .card-front, .card-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+    .card-front { display: flex; flex-direction: column; justify-content: flex-end; background: #0d0d1c; }
+    .card-scene-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+    .card-refrax .card-scene-img { filter: brightness(2.1) contrast(1.12); }
+    .card-refrax .card-name { text-shadow: 0 0 22px rgba(125,211,252,0.7), 0 2px 8px rgba(0,0,0,0.95); }
+    .card-chrona .card-scene-img { filter: brightness(2.6) contrast(1.1); }
+    @keyframes chrona-pulse { 0%, 100% { box-shadow: 0 0 22px rgba(251,191,36,0.14), 0 0 55px rgba(251,191,36,0.06); } 50% { box-shadow: 0 0 40px rgba(251,191,36,0.42), 0 0 90px rgba(251,191,36,0.22); } }
+    .card-chrona { animation: chrona-pulse 2.6s ease-in-out infinite; }
+    .card-violet .card-scene-img { height: 72%; bottom: auto; }
+    .card-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(5,5,15,1) 0%, rgba(5,5,15,0.85) 30%, rgba(5,5,15,0.2) 60%, transparent 100%); }
+    .card-front-content { position: relative; z-index: 2; padding: 20px 18px 18px; }
+    .card-emblem { position: absolute; top: 14px; right: 14px; width: 52px; height: 52px; object-fit: contain; z-index: 3; border-radius: 50%; }
+    .card-status-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .status-pip { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; animation: pip-pulse 2s infinite; }
+    @keyframes pip-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .status-text { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; letter-spacing: 0.14em; }
+    .card-name { font-size: 1.6rem; font-weight: 600; letter-spacing: 0.06em; line-height: 1; margin-bottom: 3px; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
+    .card-subtitle { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; margin-bottom: 10px; }
+    .card-flavor { font-size: 0.85rem; line-height: 1.55; color: rgba(255,255,255,0.75); font-style: italic; margin-bottom: 10px; font-weight: 300; }
+    .flip-hint { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: rgba(255,255,255,0.9); letter-spacing: 0.14em; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+    .card-back { transform: rotateY(180deg); background: #0f0f1e; border: 0.5px solid rgba(255,255,255,0.07); padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 0; overflow-y: auto; scrollbar-width: none; }
+    .card-back::-webkit-scrollbar { display: none; }
+    .back-header { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+    .back-field { padding: 7px 0; border-bottom: 0.5px solid rgba(255,255,255,0.05); }
+    .back-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 3px;
+    }
+    .back-value { font-size: 0.78rem; color: rgba(230,222,210,0.85); line-height: 1.5; font-weight: 400; text-shadow: 0 1px 4px rgba(0,0,0,0.7); }
+    .back-status-block { font-size: 0.75rem; line-height: 1.5; padding: 8px 10px; border-radius: 6px; margin-top: 3px; }
+    .back-rarity { font-size: 0.95rem; letter-spacing: 3px; }
+    .back-quote {
+      font-style: italic;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 0.5px solid rgba(255,255,255,0.05);
+      text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    }
+    .back-restore { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.38); margin-top: 8px; }
+    .back-emblem { display: block; width: 40px; height: 40px; object-fit: contain; margin: 12px auto 0; opacity: 0.6; }
+    .begin-btn { display: block; width: 100%; padding: 11px; border-radius: 7px; border: none; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; cursor: pointer; margin-top: 10px; font-weight: 600; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0; }
+    .begin-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .begin-btn:active { transform: translateY(0); }
+    .c-refrax { color: var(--refrax); } .c-magnetica { color: var(--magnetica); } .c-chrona { color: var(--chrona); } .c-violet { color: var(--violet); }
+    .pip-refrax { background: var(--refrax); } .pip-magnetica { background: var(--magnetica); } .pip-chrona { background: var(--chrona); } .pip-violet { background: var(--violet); }
+    .border-refrax { border: 0.5px solid rgba(125,211,252,0.28); } .border-magnetica { border: 0.5px solid rgba(248,113,113,0.28); } .border-chrona { border: 0.5px solid rgba(251,191,36,0.28); } .border-violet { border: 0.5px solid rgba(192,132,252,0.28); }
+    .card-refrax { box-shadow: 0 0 22px rgba(125,211,252,0.14), 0 0 55px rgba(125,211,252,0.06); border-radius: 14px; }
+    .card-magnetica { box-shadow: 0 0 22px rgba(248,113,113,0.18), 0 0 55px rgba(248,113,113,0.08); border-radius: 14px; }
+    .card-chrona { box-shadow: 0 0 22px rgba(251,191,36,0.14), 0 0 55px rgba(251,191,36,0.06); border-radius: 14px; }
+    .card-violet { box-shadow: 0 0 22px rgba(192,132,252,0.14), 0 0 55px rgba(192,132,252,0.06); border-radius: 14px; }
+    .status-refrax { background: rgba(125,211,252,0.08); color: var(--refrax); border: 0.5px solid rgba(125,211,252,0.2); }
+    .status-magnetica { background: rgba(248,113,113,0.08); color: var(--magnetica); border: 0.5px solid rgba(248,113,113,0.2); }
+    .status-chrona { background: rgba(251,191,36,0.08); color: var(--chrona); border: 0.5px solid rgba(251,191,36,0.2); }
+    .status-violet { background: rgba(192,132,252,0.08); color: var(--violet); border: 0.5px solid rgba(192,132,252,0.2); }
+    .btn-refrax { background: var(--refrax); color: #020818; } .btn-magnetica { background: var(--magnetica); color: #140004; } .btn-chrona { background: var(--chrona); color: #140f00; } .btn-violet { background: var(--violet); color: #06020e; }
+    .emblem-violet { mix-blend-mode: screen; }
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; width: 1.5px; height: 1.5px; border-radius: 50%; opacity: 0; animation: drift linear infinite; }
+    @keyframes drift { 0% { opacity: 0; transform: translateY(100vh) scale(0); } 10% { opacity: 0.4; } 90% { opacity: 0.2; } 100% { opacity: 0; transform: translateY(-10vh) scale(1); } }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; padding: 0 16px 60px; } :root { --card-h: 420px; } }
+  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<nav class="top-nav">
+</nav>
+<div class="hero">
+  <h2 class="hero-statement">Four Guardians have gone dark.</h2>
+  <p class="hero-arc">Restore each one. Master the Forge. Fix all nine systems.<br>When the ancient machine comes back online — you'll have earned your place in the Continuum,<br>where the others who figured it out are already waiting.</p>
+</div>
+<div class="grid">
+
+  <!-- REFRAX -->
+  <div class="card-scene card-refrax" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-front border-refrax">
+        <img class="card-scene-img" src="/assets/cards/refrax-grab.webp?v=1" alt="Refrax" style="object-position: 30% 40%; object-fit: cover;">
+        <div class="card-gradient"></div>
+        <div class="card-front-content">
+          <div class="card-status-bar"><span class="status-pip pip-refrax"></span><span class="status-text c-refrax">SIGNAL SCATTERED</span></div>
+          <div class="card-name c-refrax">Refrax</div>
+          <div class="card-subtitle">Silicon &amp; Boron &nbsp;·&nbsp; The Light Weaver</div>
+          <div class="card-flavor">The pathways are dark. So I grabbed the first sleeve I could find. That was yours.</div>
+          <div class="flip-hint">fix →</div>
+        </div>
+      </div>
+      <div class="card-back border-refrax">
+        <div class="back-header c-refrax">REFRAX &nbsp;·&nbsp; Si 14 &amp; B 5 &nbsp;·&nbsp; THE LIGHT WEAVER</div>
+        <div class="back-field"><div class="back-label">CURRENT STATUS</div><div class="back-status-block status-refrax">● SIGNAL SCATTERED — Hold the beam steady. Lock it in.</div></div>
+        <div class="back-field"><div class="back-label">PERSONALITY</div><div class="back-value">Bouncy · Nosy · Touchy about personal space</div></div>
+        <div class="back-quote">"Borrowed. With intent to return."</div>
+        <div class="back-field"><div class="back-label">RARITY</div><div class="back-rarity c-refrax">◆◆◆◇◇</div></div>
+        <div class="back-restore">Restore the light pathways.</div>
+        <button class="begin-btn btn-refrax" onclick="event.stopPropagation(); if(window.MaigiclyAnalytics) MaigiclyAnalytics.track({event_name:'qbit_selected',properties:{qbit_id:'refrax',qbit_name:'Refrax',source:'select'}}); window.location.href='/chambers/refrax.html'">BEGIN RESTORATION</button>
+        <img class="back-emblem" src="/assets/cards/refrax-emblem.webp" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- MAGNETICA -->
+  <div class="card-scene card-magnetica" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-front border-magnetica">
+        <img class="card-scene-img" src="/assets/cards/magnetica-emblem.webp" alt="Magnetica">
+        <div class="card-gradient"></div>
+        <div class="card-front-content">
+          <div class="card-status-bar"><span class="status-pip pip-magnetica"></span><span class="status-text c-magnetica">FIELD DRIFTING</span></div>
+          <div class="card-name c-magnetica">Magnetica</div>
+          <div class="card-subtitle">Nickel &amp; Cobalt &nbsp;·&nbsp; The Field Shaper</div>
+          <div class="card-flavor">I'm positively charming. Negatively clingy. I push. I pull. Balance me.</div>
+          <div class="flip-hint">fix →</div>
+        </div>
+      </div>
+      <div class="card-back border-magnetica">
+        <div class="back-header c-magnetica">MAGNETICA &nbsp;·&nbsp; Ni 28 &amp; Co 27 &nbsp;·&nbsp; THE FIELD SHAPER</div>
+        <div class="back-field"><div class="back-label">CURRENT STATUS</div><div class="back-status-block status-magnetica">● FIELD DRIFTING — Ni and Co are beefing again. Everything is sliding.</div></div>
+        <div class="back-field"><div class="back-label">PERSONALITY</div><div class="back-value">Full of itself · Correct about everything · Will drag you across the room by your backpack buckles</div></div>
+        <div class="back-quote">"Positively charming. Negatively clingy."</div>
+        <div class="back-field"><div class="back-label">RARITY</div><div class="back-rarity c-magnetica">◆◆◆◇◇</div></div>
+        <div class="back-restore">Restore the field.</div>
+        <button class="begin-btn btn-magnetica" onclick="event.stopPropagation(); if(window.MaigiclyAnalytics) MaigiclyAnalytics.track({event_name:'qbit_selected',properties:{qbit_id:'magnetica',qbit_name:'Magnetica',source:'select'}}); window.location.href='/chambers/magnetica.html'">BEGIN RESTORATION</button>
+        <img class="back-emblem" src="/assets/cards/magnetica-emblem.webp" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- CHRONA -->
+  <div class="card-scene card-chrona" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-front border-chrona">
+        <img class="card-scene-img" src="/assets/cards/chrona-scene.webp" alt="Chrona">
+        <div class="card-gradient"></div>
+        <div class="card-front-content">
+          <div class="card-status-bar"><span class="status-pip pip-chrona"></span><span class="status-text c-chrona">TIMING OFFLINE</span></div>
+          <div class="card-name c-chrona">Chrona</div>
+          <div class="card-subtitle">Rubidium &amp; Cesium &nbsp;·&nbsp; The Time Keeper</div>
+          <div class="card-flavor">I'm the 808. Everything runs on my beat. It's slipping. You feel that?</div>
+          <div class="flip-hint">fix →</div>
+        </div>
+      </div>
+      <div class="card-back border-chrona">
+        <div class="back-header c-chrona">CHRONA &nbsp;·&nbsp; Rb 37 &amp; Cs 55 &nbsp;·&nbsp; THE TIME KEEPER</div>
+        <div class="back-field"><div class="back-label">CURRENT STATUS</div><div class="back-status-block status-chrona">● TIMING OFFLINE — Keep choices open. Then lock the moment.</div></div>
+        <div class="back-field"><div class="back-label">PERSONALITY</div><div class="back-value">All business · Always in a hurry · Correct about when</div></div>
+        <div class="back-quote">"You'll feel the bus you haven't caught yet."</div>
+        <div class="back-field"><div class="back-label">RARITY</div><div class="back-rarity c-chrona">◆◆◆◆◇</div></div>
+        <div class="back-restore">Restore the beat.</div>
+        <button class="begin-btn btn-chrona" onclick="event.stopPropagation(); if(window.MaigiclyAnalytics) MaigiclyAnalytics.track({event_name:'qbit_selected',properties:{qbit_id:'chrona',qbit_name:'Chrona',source:'select'}}); window.location.href='/chambers/chrona.html'">BEGIN RESTORATION</button>
+        <img class="back-emblem" src="/assets/cards/chrona-emblem.webp" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- VIOLET FLICKER -->
+  <div class="card-scene card-violet" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-front border-violet">
+        <img class="card-scene-img" src="/assets/cards/violet-scene.webp" alt="Violet Flicker">
+        <div class="card-gradient"></div>
+        <div class="card-front-content">
+          <div class="card-status-bar"><span class="status-pip pip-violet"></span><span class="status-text c-violet">PLASMA DARK</span></div>
+          <div class="card-name c-violet">Violet Flicker</div>
+          <div class="card-subtitle">Krypton &amp; Xenon &nbsp;·&nbsp; The Signal Hunter</div>
+          <div class="card-flavor">I start everything. PHHRRRTTT. If you smelt it, you dealt it.</div>
+          <div class="flip-hint">fix →</div>
+        </div>
+      </div>
+      <div class="card-back border-violet">
+        <div class="back-header c-violet">VIOLET FLICKER &nbsp;·&nbsp; Kr 36 &amp; Xe 54 &nbsp;·&nbsp; THE SIGNAL HUNTER</div>
+        <div class="back-field"><div class="back-label">CURRENT STATUS</div><div class="back-status-block status-violet">● PLASMA DARK — Nothing wakes up without this spark. I'm the plug.</div></div>
+        <div class="back-field"><div class="back-label">PERSONALITY</div><div class="back-value">Smug · Dramatic · Zero shame</div></div>
+        <div class="back-quote">"The spark that starts everything."</div>
+        <div class="back-field"><div class="back-label">RARITY</div><div class="back-rarity c-violet">◆◆◆◆◆</div></div>
+        <div class="back-restore">Restore the spark.</div>
+        <button class="begin-btn btn-violet" onclick="event.stopPropagation(); if(window.MaigiclyAnalytics) MaigiclyAnalytics.track({event_name:'qbit_selected',properties:{qbit_id:'violetflicker',qbit_name:'Violet Flicker',source:'select'}}); window.location.href='/chambers/violetflicker.html'">BEGIN RESTORATION</button>
+        <img class="back-emblem" src="/assets/cards/violet-emblem.webp" alt="">
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="/js/analytics.js"></script>
+<script src="/js/architect-id.js"></script>
+<script src="/js/global-points.js"></script>
+<script>
+window.location.replace('/resonance.html');
+  (function() {
+    const container = document.getElementById('particles');
+    const colors = ['#7dd3fc','#f87171','#fbbf24','#c084fc'];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDelay = Math.random() * 12 + 's';
+      p.style.animationDuration = (10 + Math.random() * 8) + 's';
+      container.appendChild(p);
+    }
+  })();
+  if (window.MaigiclyAnalytics) MaigiclyAnalytics.track({ event_name: 'select_page_load' });
+</script>
+  <script src="/js/system-map.js"></script>
+</body>
+</html>

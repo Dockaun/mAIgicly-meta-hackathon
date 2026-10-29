@@ -1,0 +1,159 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Unlocked - mAIgicly</title>
+  <style>
+    body { 
+      background: #000; 
+      color: #fff; 
+      font-family: system-ui, sans-serif; 
+      display: grid; 
+      place-items: center; 
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .comic-container { 
+      max-width: 1100px; 
+      text-align: center; 
+      padding: 20px;
+      width: 100%;
+    }
+    h2 { 
+      color: var(--qbit-color, #7dd3fc); 
+      margin-bottom: 10px; 
+      font-weight: 300;
+      font-size: 1.8rem;
+    }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+    .spread-panel {
+      display: inline-flex;
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      background: rgba(20, 24, 40, 0.6);
+      padding: 1rem;
+      border-radius: 12px;
+      border: 2px solid var(--qbit-color, #7dd3fc);
+      box-shadow: 0 0 20px rgba(125, 211, 252, 0.4);
+      margin-bottom: 20px;
+      width: fit-content;
+      max-width: 90vw;
+    }
+    .comic-page { 
+      height: auto;
+      max-height: 75vh;
+      max-width: 45vw;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    button { 
+      padding: 12px 24px; 
+      background: var(--qbit-color, #7dd3fc); 
+      color: #000; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      font-size: 1rem; 
+      transition: all 0.3s ease;
+    }
+    button:hover { 
+      opacity: 0.8; 
+      transform: translateY(-1px); 
+    }
+    @media (max-width: 768px) {
+      .spread-panel {
+        flex-direction: column;
+      }
+      .comic-page {
+        max-width: 90vw;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+  <div class="comic-container">
+    <h2 id="pageTitle">Story Unlocked!</h2>
+    <p class="subtitle" id="subtitle">Chamber Complete</p>
+    <p class="subtitle">Recovered log from a previous apprentice. Compare their steps to what you just did.</p>
+    <div class="spread-panel">
+      <img id="comicPage1" class="comic-page" src="" alt="Comic Page 1">
+      <img id="comicPage2" class="comic-page" src="" alt="Comic Page 2">
+    </div>
+    <div class="controls">
+      <button id="returnBtn">Return to Core</button>
+    </div>
+  </div>
+  <script>
+    // Qbit configuration with page mappings
+    const QBIT_CONFIG = {
+      'violetflicker': { 
+        title: 'Violet Flicker: The Signal Hunter', 
+        color: '#a78bfa',
+        pages: [25, 26]
+      },
+      'refrax': { 
+        title: 'Refrax: The Light Weaver', 
+        color: '#7dd3fc',
+        pages: [34, 35]
+      },
+      'magnetica': { 
+        title: 'Magnetica: The Field Shaper', 
+        color: '#ef4444',
+        pages: [42, 43]
+      },
+      'chrona': { 
+        title: 'Chrona: The Time Keeper', 
+        color: '#fbbf24',
+        pages: [50, 51]
+      }
+    };
+
+    function loadQbitPages() {
+      const params = new URLSearchParams(window.location.search);
+      const qbit = params.get('qbit') || 'refrax';
+      
+      const config = QBIT_CONFIG[qbit];
+      if (!config) {
+        console.error('Unknown qbit:', qbit);
+        return;
+      }
+
+      // Update title and color
+      document.getElementById('pageTitle').textContent = config.title;
+      document.documentElement.style.setProperty('--qbit-color', config.color);
+
+      // Load the 2 pages for this Qbit
+      const [page1, page2] = config.pages;
+      document.getElementById('comicPage1').src = `/comic/mAIgicly October 9-${page1}.webp`;
+      document.getElementById('comicPage2').src = `/comic/mAIgicly October 9-${page2}.webp`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadQbitPages();
+
+      document.getElementById('returnBtn').addEventListener('click', () => {
+        window.location.href = '/resonance.html';
+      });
+    });
+  </script>
+  <script src="/js/system-map.js"></script>
+</body>
+</html>

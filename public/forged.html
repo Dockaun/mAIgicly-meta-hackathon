@@ -1,0 +1,687 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forged Qbit Chamber</title>
+    <script src="/js/global-points.js"></script>
+    <script src="/js/qbit-fx.js"></script>
+    <script src="/js/forged-qbits-store.js"></script>
+    <script defer src="/js/drag-copy-fix.js"></script>
+    <style>
+      /* --- STANDARDIZED THEME --- */
+      :root {
+        --panel: #0d1426;
+        --line: #24304d;
+        --text: #ffffff;
+        --accent: #7dd3fc; /* Default Blue */
+        --good: #34d399;
+        --warn: #fbbf24;
+        --bad: #f87171;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          sans-serif;
+        background: #000000;
+        min-height: 100vh;
+      }
+
+      /* --- HEADER (Standardized) --- */
+      header {
+        width: 100%;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(
+          180deg,
+          rgba(13, 18, 34, 1),
+          rgba(13, 18, 34, 0.85)
+        );
+        position: relative;
+        z-index: 10;
+      }
+
+      .header-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 18px 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      header h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .subtitle {
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+        color: #94a3b8;
+        margin: 0;
+      }
+
+      .nav-btn {
+        cursor: pointer;
+        text-decoration: none;
+        background: rgba(17, 26, 42, 0.8);
+        color: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+      .nav-btn:hover {
+        border-color: var(--accent);
+        background: rgba(125, 211, 252, 0.1);
+      }
+
+      /* --- LAYOUT --- */
+      .wrap {
+        width: 100%;
+        max-width: 1120px;
+        margin: 40px auto 80px auto;
+        padding: 0 16px;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 20px;
+        position: relative;
+        z-index: 5;
+      }
+
+      /* --- PANELS --- */
+      .panel {
+        background: rgba(13, 20, 38, 0.95);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+        position: relative;
+      }
+
+      /* --- AVATAR & MEDIA --- */
+      .avatar {
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: radial-gradient(
+          120% 120% at 50% 0%,
+          #0f1d3a 0%,
+          #0a1329 60%
+        );
+        border: 1px solid var(--line);
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      /* --- GRID PARTS --- */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 12px;
+      }
+
+      .part {
+        min-height: 100px;
+        background: radial-gradient(
+          120% 120% at 20% 0%,
+          rgba(16, 27, 51, 0.8) 0%,
+          rgba(13, 21, 42, 0.9) 100%
+        );
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        position: relative;
+      }
+      .part h3 {
+        font-size: 13px;
+        margin: 0 0 6px;
+        color: #fff;
+      }
+      .part.done {
+        border-color: var(--good);
+      }
+
+      .mini {
+        margin-top: 8px;
+        background: rgba(15, 24, 48, 0.5);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px;
+        font-size: 12px;
+      }
+
+      /* --- CHIPS (MODS) --- */
+      .mods {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .mod {
+        background: var(--panel);
+        border: 1px dashed var(--line);
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+        cursor: grab;
+      }
+
+      /* --- STATES --- */
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #94a3b8;
+      }
+      .error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--bad);
+        color: var(--bad);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .completion-message {
+        background: rgba(52, 211, 153, 0.1);
+        border: 1px solid var(--good);
+        color: var(--good);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 1rem;
+      }
+
+      /* --- FX --- */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(circle at center, rgba(0, 40, 90, 0.6), #000 80%),
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.03) 0px,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px,
+            transparent 40px
+          );
+        backdrop-filter: blur(12px) saturate(90%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      body {
+        background-blend-mode: multiply;
+      }
+
+      #star-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .star {
+        position: absolute;
+        width: 150px;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.8),
+          rgba(255, 255, 255, 0)
+        );
+        transform: rotate(-45deg);
+        opacity: 0;
+        animation: shoot 2s linear forwards;
+      }
+      @keyframes shoot {
+        0% {
+          transform: translateX(0) translateY(0) rotate(-45deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(-800px) translateY(800px) rotate(-45deg);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .header-inner {
+          padding: 12px 14px;
+        }
+        .wrap {
+          grid-template-columns: 1fr;
+          margin: 20px auto;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/css/theme.css" />
+  </head>
+  <body>
+    <div id="star-container"></div>
+
+    <header>
+      <div class="header-inner">
+        <div class="header-title-group">
+          <video
+            src="/assets/video/turntable.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            style="
+              height: 40px;
+              width: 40px;
+              border-radius: 50%;
+              border: 1px solid #333;
+              object-fit: cover;
+            "
+          ></video>
+          <div>
+            <h1 id="qbitTitle">Loading Forged Qbit...</h1>
+            <p class="subtitle">Points: <span id="points">0</span></p>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <a href="/resonance.html" class="nav-btn">← Back to Gallery</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="panel">
+        <h2 id="qbitName">Loading...</h2>
+
+        <div class="avatar">
+          <canvas
+            id="qbitCanvas"
+            width="512"
+            height="512"
+            style="max-height: 140px; max-width: 100%; display: block"
+          ></canvas>
+          <img
+            id="qbitGif"
+            src=""
+            alt="Qbit Animation"
+            style="display: none; max-height: 140px"
+          />
+          <video
+            id="qbitVideo"
+            autoplay
+            muted
+            loop
+            playsinline
+            style="
+              display: none;
+              max-height: 140px;
+              filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.35));
+            "
+          >
+            <source id="qbitVideoSource" src="" type="video/mp4" />
+          </video>
+        </div>
+
+        <p
+          class="copy"
+          id="qbitRole"
+          style="font-style: italic; color: #94a3b8; margin-bottom: 20px"
+        ></p>
+
+        <h3 style="font-size: 14px; color: #fff; margin-bottom: 10px">
+          Available Fixes
+        </h3>
+        <div class="mods" id="fixesContainer"></div>
+
+        <h3 style="font-size: 14px; color: #fff; margin: 20px 0 10px 0">
+          Power Boost
+        </h3>
+        <div class="mods" id="boostContainer"></div>
+      </div>
+
+      <div class="panel">
+        <h2 style="display: flex; justify-content: space-between">
+          Chamber Protocol
+          <span
+            style="
+              font-size: 12px;
+              color: var(--accent);
+              border: 1px solid var(--accent);
+              padding: 4px 8px;
+              border-radius: 6px;
+            "
+            >CLASSIFIED</span
+          >
+        </h2>
+
+        <div id="loadingState" class="loading">
+          Loading chamber configuration...
+        </div>
+        <div id="errorState" class="error" style="display: none">
+          Failed to load forged Qbit.
+        </div>
+
+        <div id="chamberGrid" class="grid" style="display: none"></div>
+
+        <div
+          id="completionMessage"
+          class="completion-message"
+          style="display: none"
+        >
+          🎉 Chamber protocol completed! All quantum fixes successfully applied.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- SHOOTING STARS FX ---
+      const starContainer = document.getElementById("star-container");
+      function spawnStar() {
+        const star = document.createElement("div");
+        star.classList.add("star");
+        const startX = Math.random() * window.innerWidth + 200;
+        const startY = Math.random() * (window.innerHeight / 2) - 200;
+        star.style.left = `${startX}px`;
+        star.style.top = `${startY}px`;
+        const scale = 0.5 + Math.random();
+        star.style.transform = `rotate(-45deg) scale(${scale})`;
+        starContainer.appendChild(star);
+        setTimeout(() => {
+          star.remove();
+        }, 2000);
+      }
+      function loop() {
+        const delay = Math.random() * 4000 + 2000;
+        spawnStar();
+        setTimeout(loop, delay);
+      }
+      loop();
+
+      // ---------------- LOGIC ----------------
+      const urlParams = new URLSearchParams(window.location.search);
+      const qbitIdParam = urlParams.get("id");
+
+      if (!qbitIdParam) {
+        document.getElementById("errorState").textContent =
+          "No Qbit ID provided";
+        document.getElementById("errorState").style.display = "block";
+        document.getElementById("loadingState").style.display = "none";
+      }
+
+      const NS = `forgedQbit.${qbitIdParam}.v1.`;
+      const KEYS = {
+        part: (i) => `${NS}part.${i}`,
+        complete: `${NS}complete`,
+        points: `${NS}points`,
+        attempts: (i) => `${NS}attempts.${i}`,
+      };
+
+      const LS = {
+        get: (k, f = null) => {
+          const r = localStorage.getItem(k);
+          return r === null ? f : JSON.parse(r);
+        },
+        set: (k, v) =>
+          localStorage.setItem(
+            k,
+            typeof v === "string" ? v : JSON.stringify(v),
+          ),
+      };
+
+      const Progress = {
+        partDone: (i) =>
+          LS.get(KEYS.part(i)) === true || LS.get(KEYS.part(i)) === "true",
+        setPart: (i) => LS.set(KEYS.part(i), "true"),
+        isComplete: () => LS.get(KEYS.complete) === "true",
+        setComplete: () => LS.set(KEYS.complete, "true"),
+        points: () => Number(LS.get(KEYS.points, 0)) || 0,
+        add: (n) => {
+          const newScore = Progress.points() + n;
+          LS.set(KEYS.points, newScore);
+          return newScore;
+        },
+        getAttempts: (i) => Number(LS.get(KEYS.attempts(i), 0)) || 0,
+        addAttempt: (i) =>
+          LS.set(KEYS.attempts(i), Progress.getAttempts(i) + 1),
+      };
+
+      let currentQbit = null;
+
+      async function loadForgedQbit() {
+        try {
+          const forgedQbits = window.ForgedQbitsStore
+            ? await window.ForgedQbitsStore.getAll('continuum')
+            : [];
+          currentQbit = forgedQbits.find(
+            (q) => String(q.id) === String(qbitIdParam),
+          );
+
+          if (!currentQbit) throw new Error(`Forged Qbit not found.`);
+
+          setupChamber();
+        } catch (error) {
+          console.error(error);
+          document.getElementById("errorState").textContent = error.message;
+          document.getElementById("errorState").style.display = "block";
+          document.getElementById("loadingState").style.display = "none";
+        }
+      }
+
+      function setupChamber() {
+        // Reset logic for replayability
+        const isAlreadyCompleted = Progress.isComplete();
+        currentQbit.parts.forEach((_, i) => {
+          LS.set(KEYS.part(i), "false");
+          LS.set(KEYS.attempts(i), 0);
+        });
+        LS.set(KEYS.points, 0);
+        if (!isAlreadyCompleted) LS.set(KEYS.complete, "false");
+        localStorage.removeItem(`${NS}posted`);
+
+        // Update UI
+        document.getElementById("qbitTitle").textContent =
+          `${currentQbit.name}`;
+        document.getElementById("qbitName").textContent = currentQbit.name;
+        document.getElementById("qbitRole").textContent =
+          currentQbit.role || "Unknown Role";
+
+        loadQbitMedia();
+        setupFixes();
+        setupBoost();
+        setupParts();
+        updatePointsDisplay();
+
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("chamberGrid").style.display = "grid";
+      }
+
+      function setupFixes() {
+        const container = document.getElementById("fixesContainer");
+        container.innerHTML = "";
+        if (!currentQbit.fixes) return;
+
+        [...currentQbit.fixes]
+          .sort(() => Math.random() - 0.5)
+          .forEach((fix) => {
+            const el = document.createElement("div");
+            el.className = "mod";
+            el.draggable = true;
+            el.textContent = fix;
+            el.dataset.fix = fix;
+            el.addEventListener("dragstart", (e) =>
+              e.dataTransfer.setData("text/plain", fix),
+            );
+            container.appendChild(el);
+          });
+      }
+
+      function setupBoost() {
+        const container = document.getElementById("boostContainer");
+        container.innerHTML = "";
+        if (currentQbit.boost) {
+          const el = document.createElement("div");
+          el.className = "mod";
+          el.draggable = true;
+          el.style.borderColor = "#a78bfa";
+          el.style.color = "#a78bfa";
+          el.textContent = currentQbit.boost;
+          el.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", currentQbit.boost);
+            e.dataTransfer.setData("application/boost", "true");
+          });
+          container.appendChild(el);
+        }
+      }
+
+      function setupParts() {
+        const container = document.getElementById("chamberGrid");
+        container.innerHTML = "";
+        if (!currentQbit.parts) return;
+
+        const partIndices = currentQbit.parts.map((_, i) => i);
+        const shuffled = [...partIndices].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((index) => {
+          const partName = currentQbit.parts[index];
+          const el = document.createElement("div");
+          el.className = "part";
+
+          const title = document.createElement("h3");
+          title.textContent = partName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+          const mini = document.createElement("div");
+          mini.className = "mini";
+          mini.textContent = "Awaiting Fix...";
+
+          el.appendChild(title);
+          el.appendChild(mini);
+
+          // Drag Drop Logic
+          el.addEventListener("dragover", (e) => e.preventDefault());
+          el.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const dropped = e.dataTransfer.getData("text/plain");
+            const isBoost = !!e.dataTransfer.getData("application/boost");
+
+            // Logic: Check against correct fix
+            const correctFix =
+              currentQbit.fixes[Math.min(index, currentQbit.fixes.length - 1)];
+
+            // Allow Boost on specific parts (Simulated logic)
+            if (
+              isBoost &&
+              ["readout", "hall_sensor", "light_catcher"].includes(partName)
+            ) {
+              handleSuccess(el, index, dropped, true);
+              return;
+            }
+
+            if (dropped === correctFix) {
+              handleSuccess(el, index, dropped, false);
+            } else {
+              alert("Frequency mismatch! Try a different fix.");
+            }
+          });
+
+          container.appendChild(el);
+        });
+      }
+
+      function handleSuccess(el, index, fixName, isBoost) {
+        // 1) CALCULATE POINTS
+        const pointsEarned = isBoost ? 2 : 1;
+
+        // 2) ADD TO SCORE + UPDATE HEADER
+        Progress.add(pointsEarned);
+        updatePointsDisplay(); // <-- this is the missing piece
+        Progress.setPart(index);
+
+        // 3) UI FEEDBACK
+        el.classList.add("done");
+        const mini = el.querySelector(".mini");
+        if (mini) {
+          mini.textContent = `✓ ${isBoost ? "Boosted" : "Fixed"} with ${fixName}`;
+          mini.style.color = "#34d399";
+        }
+
+        // 4) CHECK FOR VICTORY
+        if (currentQbit.parts.every((_, i) => Progress.partDone(i))) {
+          document.getElementById("completionMessage").style.display = "block";
+          if (typeof postCompletionToAPI === "function") postCompletionToAPI();
+        }
+      }
+
+      function loadQbitMedia() {
+        // Map Roles to Videos
+        const missionMapping = {
+          "Harmonic Tuning — make vibrations sing as one":
+            "/sprites/harmonic_fork_base_512.mp4",
+          "Entanglement — distant channels act as one":
+            "/sprites/entanglement.mp4",
+          "Coherence Stitching — keep waves in step":
+            "/sprites/coherence_stitching.mp4",
+          "Energy Absorption — tame excess into calm":
+            "/sprites/energy_absorption.mp4",
+          "Stealth / Masking — hide the signal in plain sight":
+            "/sprites/stealth_masking.mp4",
+        };
+
+        // Default Fallback
+        let videoPath = "/sprites/harmonic_fork_base_512.mp4";
+
+        // Check Role
+        if (currentQbit.role && missionMapping[currentQbit.role]) {
+          videoPath = missionMapping[currentQbit.role];
+        } else if (currentQbit.mission_id) {
+          // Fallback for ID matching
+          if (currentQbit.mission_id.includes("entanglement"))
+            videoPath = "/sprites/entanglement.mp4";
+          if (currentQbit.mission_id.includes("stealth"))
+            videoPath = "/sprites/stealth_masking.mp4";
+          if (currentQbit.mission_id.includes("absorption"))
+            videoPath = "/sprites/energy_absorption.mp4";
+          if (currentQbit.mission_id.includes("coherence"))
+            videoPath = "/sprites/coherence_stitching.mp4";
+        }
+
+        const videoEl = document.getElementById("qbitVideo");
+        document.getElementById("qbitVideoSource").src = videoPath;
+        videoEl.style.display = "block";
+        videoEl.load();
+      }
+
+      function updatePointsDisplay() {
+        document.getElementById("points").textContent = Progress.points();
+      }
+
+      if (qbitIdParam) loadForgedQbit();
+    </script>
+    <script src="/js/system-map.js"></script>
+  </body>
+</html>

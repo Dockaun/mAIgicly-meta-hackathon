@@ -1,0 +1,1137 @@
+<!-- © 2026 mAIgicly. Quantum Forge, Chrona guardian -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quantum Forge — Chrona</title>
+<style>
+  :root {
+    --bg: #1c0e00;
+    --panel: rgba(232,130,10,0.18);
+    --panel-border: rgba(255,210,0,0.42);
+    --ink: #fffbe8;
+    --muted: rgba(255,235,120,0.80);
+    --muted2: rgba(245,220,100,0.65);
+    --glow: #ffd000;
+    --chrona: #ffe030;
+    --ok: #34d399;
+    --amber: #ffc800;
+    --amber-dim: rgba(255,200,0,0.35);
+    --amber-glow: rgba(255,220,40,0.55);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+  #bgStage { position: fixed; inset: 0; z-index: 0; background: #1c0e00; overflow: hidden; }
+  #morphVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center center; }
+  #settledImage { position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 40%; object-fit: cover; object-position: right top; }
+  #morphVideo { z-index: 2; opacity: 1; transition: opacity 0.9s ease; }
+  #settledImage { z-index: 1; opacity: 0; transition: opacity 1.2s ease; filter: brightness(1.08) saturate(1.35) contrast(1.02); transform: scaleX(-1); }
+  #bgScrim { position: absolute; inset: 0; z-index: 3; background: linear-gradient(115deg, rgba(180,90,0,0.55) 0%, rgba(180,90,0,0.18) 42%, rgba(180,90,0,0.0) 65%, rgba(180,90,0,0.0) 100%); opacity: 0; transition: opacity 1.2s ease; }
+
+  #app { position: relative; z-index: 10; display: flex; min-height: 100vh; opacity: 0; transition: opacity 1s ease; }
+
+  .left-col { width: 260px; flex-shrink: 0; padding: 24px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .center-col { width: 420px; flex-shrink: 0; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  .center-mission-label { font-size: 11px; color: rgba(240,200,100,0.45); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; margin-bottom: 2px; }
+  .center-mission-title { font-size: 16px; font-weight: 600; color: var(--ink); text-align: center; margin-bottom: 2px; }
+  .center-mission-sub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+
+  #centerQbitAvatar { width: 100%; max-width: 380px; height: 380px; border-radius: 20px; background: radial-gradient(120% 120% at 50% 0%, #1c0e00 0%, #120800 70%); border: 1px solid rgba(180,140,40,0.22); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(245,166,35,0.12), 0 0 24px rgba(30,200,160,0.06), inset 0 1px 20px rgba(200,160,50,0.06); transition: box-shadow 0.6s ease, border-color 0.6s ease; }
+  #centerQbitAvatar.stabilized { border-color: rgba(245,166,35,0.65); box-shadow: 0 0 56px rgba(245,166,35,0.28), 0 0 32px rgba(30,200,160,0.14), inset 0 1px 20px rgba(200,160,50,0.10); }
+  #centerQbitAvatar canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  #timingMonitor { width: 100%; max-width: 380px; background: linear-gradient(135deg, rgba(232,130,10,0.22), rgba(200,100,0,0.14)); backdrop-filter: blur(10px); border: 1px solid rgba(180,140,40,0.22); border-radius: 14px; padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .tester-header { display: flex; align-items: center; justify-content: space-between; }
+  .tester-label { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(220,180,80,0.50); }
+  .tester-status { font-size: 11px; font-weight: 600; color: rgba(245,166,35,0.8); letter-spacing: 0.04em; transition: color 0.4s ease; }
+  .tester-status.status-none     { color: rgba(150,130,90,0.4); }
+  .tester-status.status-weak     { color: rgba(200,160,60,0.75); }
+  .tester-status.status-building { color: rgba(230,170,40,0.85); }
+  .tester-status.status-stable   { color: rgba(245,185,50,0.90); }
+  .tester-status.status-aligned  { color: rgba(245,200,70,1); }
+  .tester-status.status-online   { color: rgba(52,211,153,1); }
+  #waveCanvas { width: 100%; height: 40px; display: block; border-radius: 6px; }
+  .signal-bar-track { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+  .signal-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, rgba(180,140,0,0.7), rgba(255,210,0,0.98)); width: 0%; transition: width 0.5s ease; }
+
+  #qbitGhostOverlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; background: rgba(12,8,2,0.55); transition: opacity 0.6s ease; pointer-events: none; }
+  #qbitGhostOverlay.hidden { opacity: 0; }
+  .ghost-ring { width: 80px; height: 80px; border-radius: 50%; border: 2px dashed rgba(220,180,60,0.3); animation: ghostPulse 2.4s ease-in-out infinite; }
+  .ghost-label { font-size: 11px; color: rgba(220,180,60,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+  @keyframes ghostPulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
+  #centerBuildTags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 28px; }
+
+  .install-slots-section { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 8px; }
+  .install-slots-label { font-size: 10px; color: rgba(220,180,80,0.40); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 2px; }
+  .install-slots-row { display: flex; gap: 6px; }
+  .install-slot { flex: 1; min-height: 36px; border-radius: 10px; border: 1.5px dashed rgba(200,160,50,0.26); background: rgba(10,20,14,0.45); display: flex; align-items: center; justify-content: center; font-size: 11px; color: rgba(200,160,50,0.32); letter-spacing: 0.03em; transition: border-color 0.25s, background 0.25s; padding: 4px 6px; text-align: center; position: relative; overflow: hidden; }
+  .install-slot.filled { border-color: rgba(245,166,35,0.55); background: linear-gradient(135deg, rgba(245,166,35,0.12), rgba(140,90,10,0.10)); color: rgba(255,230,140,0.92); font-weight: 600; font-size: 10.5px; }
+  .install-slot.filled.boost-slot { border-color: rgba(30,200,160,0.50); background: linear-gradient(135deg, rgba(30,200,160,0.12), rgba(10,80,60,0.10)); color: rgba(120,255,210,0.92); }
+  .install-slot.flash::after { content: ''; position: absolute; inset: 0; background: rgba(245,166,35,0.32); animation: slotFlash 0.4s ease forwards; }
+  @keyframes slotFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+  .component-tray { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .component-card { cursor: pointer; padding: 7px 10px; border-radius: 10px; border: 1px solid rgba(200,160,50,0.22); background: linear-gradient(135deg, rgba(232,130,10,0.10), rgba(200,100,0,0.06)); backdrop-filter: blur(4px); transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px; position: relative; overflow: hidden; width: fit-content; max-width: 320px; }
+  .component-card:hover:not(.installed) { border-color: rgba(220,175,60,0.45); background: linear-gradient(135deg, rgba(232,130,10,0.16), rgba(200,100,0,0.10)); transform: translateX(2px); }
+  .component-card.installed { border-color: rgba(245,166,35,0.55); background: linear-gradient(135deg, rgba(245,166,35,0.11), rgba(140,90,10,0.08)); cursor: pointer; }
+  .component-card.installed.boost-installed { border-color: rgba(30,200,160,0.50); background: linear-gradient(135deg, rgba(30,200,160,0.11), rgba(10,80,60,0.08)); }
+  .component-card .tap-ripple { position: absolute; border-radius: 50%; background: rgba(245,166,35,0.28); width: 8px; height: 8px; transform: scale(0); animation: rippleOut 0.45s ease forwards; pointer-events: none; }
+  @keyframes rippleOut { to { transform: scale(30); opacity: 0; } }
+  .component-status-dot { display: none; }
+  .component-info { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+  .component-name { font-size: 12.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .component-desc { font-size: 11px; color: var(--muted2); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .component-action { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(200,160,50,0.45); flex-shrink: 0; padding: 3px 8px; border: 1px solid rgba(200,160,50,0.20); border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
+  .component-card:hover:not(.installed) .component-action { color: rgba(245,185,60,0.85); border-color: rgba(245,185,60,0.40); }
+  .component-card.installed .component-action { color: var(--amber); border-color: rgba(245,166,35,0.40); background: rgba(245,166,35,0.07); }
+  .component-card.installed.boost-installed .component-action { color: rgba(30,200,160,0.9); border-color: rgba(30,200,160,0.40); background: rgba(30,200,160,0.07); }
+
+  .companion-box { background: linear-gradient(140deg, rgba(232,130,10,0.22), rgba(200,100,0,0.12)); backdrop-filter: blur(8px); border-radius: 20px 20px 20px 4px; border: 1px solid rgba(255,210,0,0.55); padding: 18px 20px; box-shadow: inset 0 1px 16px rgba(200,155,40,0.12), 0 0 28px rgba(200,155,40,0.16), 0 0 48px rgba(30,200,160,0.06), 0 4px 24px rgba(0,0,0,0.35); position: relative; transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+  .companion-box.hint-flash { border-color: rgba(245,200,60,0.95); box-shadow: inset 0 1px 16px rgba(245,200,60,0.22), 0 0 48px rgba(245,166,35,0.45), 0 0 32px rgba(30,200,160,0.18), 0 4px 24px rgba(0,0,0,0.35); }
+  .companion-box::before { content: ''; position: absolute; top: -8px; left: 12%; width: 55%; height: 24px; background: linear-gradient(180deg, rgba(220,170,50,0.30), transparent); border-radius: 50%; filter: blur(3px); pointer-events: none; }
+  .companion-box::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #ffd000, #1ec8a0); border-radius: 0 0 20px 4px; }
+  .companion-name { font-size: 11px; background: linear-gradient(90deg, #ffe030, #1ec8a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 6px; position: relative; }
+  .companion-line { font-size: 13px; color: rgba(255,240,200,0.92); line-height: 1.55; transition: opacity 0.2s ease; position: relative; }
+
+  .panel { background: linear-gradient(135deg, rgba(232,130,10,0.13), rgba(200,100,0,0.08)); backdrop-filter: blur(6px); border-radius: 18px; border: 1px solid rgba(180,140,40,0.32); padding: 14px; box-shadow: inset 0 1px 12px rgba(220,175,60,0.10), 0 0 16px rgba(200,150,30,0.05); }
+  .panel-label { font-size: 11px; color: rgba(230,190,80,0.62); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+
+  .step-row { padding: 8px 10px; margin-bottom: 4px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: rgba(200,170,90,0.30); }
+  .step-row .num { font-size: 11px; opacity: 0.7; width: 14px; }
+  .step-row.active { background: rgba(200,155,40,0.14); color: var(--chrona); font-weight: 600; }
+  .step-row.done { color: rgba(52,211,153,0.85); }
+  .step-row .lock-icon { margin-left: auto; opacity: 0.5; }
+  .step-row .check-icon { margin-left: auto; color: var(--ok); }
+
+  .build-summary-line { font-size: 12px; color: var(--muted2); line-height: 1.7; }
+  .build-summary-line .filled { color: rgba(255,230,140,0.88); }
+
+  .machine-box { background: linear-gradient(135deg, rgba(232,130,10,0.16), rgba(200,100,0,0.10)); backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid rgba(180,140,40,0.28); padding: 13px 14px; }
+  .machine-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .machine-title { font-size: 11px; color: rgba(220,180,80,0.55); letter-spacing: 0.05em; }
+  .machine-status { font-size: 10px; color: rgba(180,150,60,0.32); margin-left: auto; }
+  .machine-btn { width: 100%; background: rgba(232,130,10,0.10); border: 1px solid rgba(220,130,10,0.28); color: rgba(240,210,120,0.72); padding: 8px; font-size: 12px; border-radius: 10px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+  .machine-btn:hover { background: rgba(232,130,10,0.18); }
+
+  #machineChatPanel { position: fixed; bottom: 0; left: 0; width: 320px; max-height: 480px; background: linear-gradient(160deg, rgba(28,14,0,0.96), rgba(22,10,0,0.97)); backdrop-filter: blur(16px); border: 1px solid rgba(180,140,40,0.28); border-radius: 18px 18px 0 0; z-index: 200; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s ease; box-shadow: 0 -8px 40px rgba(0,0,0,0.5), 0 0 32px rgba(180,140,40,0.08); }
+  #machineChatPanel.open { transform: translateY(0); }
+  .machine-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid rgba(180,140,40,0.14); flex-shrink: 0; }
+  .machine-panel-title { font-size: 12px; font-weight: 600; color: rgba(230,190,80,0.80); letter-spacing: 0.06em; text-transform: uppercase; }
+  .machine-panel-close { background: none; border: none; color: rgba(200,165,60,0.5); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; font-family: inherit; }
+  .machine-panel-close:hover { color: rgba(245,200,80,0.85); }
+  .machine-context-strip { padding: 8px 16px; font-size: 10.5px; color: rgba(200,160,60,0.50); border-bottom: 1px solid rgba(180,140,40,0.08); flex-shrink: 0; letter-spacing: 0.02em; }
+  .machine-messages { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 120px; }
+  .machine-msg { font-size: 12.5px; line-height: 1.55; padding: 9px 12px; border-radius: 12px; max-width: 92%; }
+  .machine-msg.machine { background: rgba(232,130,10,0.16); border: 1px solid rgba(180,140,40,0.18); color: rgba(240,215,140,0.92); align-self: flex-start; }
+  .machine-msg.player { background: rgba(232,130,10,0.18); border: 1px solid rgba(180,140,40,0.24); color: rgba(255,235,160,0.85); align-self: flex-end; }
+  .machine-msg.thinking { background: rgba(232,130,10,0.10); border: 1px solid rgba(180,140,40,0.10); color: rgba(180,150,60,0.5); align-self: flex-start; font-style: italic; font-size: 12px; }
+  .machine-input-row { display: flex; gap: 8px; padding: 10px 14px 14px; border-top: 1px solid rgba(180,140,40,0.12); flex-shrink: 0; }
+  .machine-input { flex: 1; background: rgba(28,14,0,0.55); border: 1px solid rgba(140,110,30,0.25); color: var(--ink); padding: 8px 12px; border-radius: 10px; font-size: 12.5px; font-family: inherit; outline: none; resize: none; }
+  .machine-input:focus { border-color: rgba(220,175,60,0.5); }
+  .machine-input::placeholder { color: rgba(180,145,50,0.32); }
+  .machine-send-btn { background: rgba(180,140,30,0.15); border: 1px solid rgba(180,140,30,0.30); color: rgba(240,205,80,0.85); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-family: inherit; flex-shrink: 0; transition: background 0.15s; }
+  .machine-send-btn:hover { background: rgba(180,140,30,0.26); }
+  .machine-send-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .main-col { flex: 0 0 440px; max-width: 440px; padding: 28px 32px 80px; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+  .main-inner { width: 100%; max-width: 380px; }
+
+  .step-label { font-size: 12px; color: rgba(220,180,80,0.52); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; text-align: center; }
+  .step-sub { font-size: 12px; color: var(--muted2); margin-bottom: 16px; text-align: center; }
+  .group-label { font-size: 10px; color: rgba(210,170,60,0.40); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; text-align: center; }
+  .group-label:first-child { margin-top: 0; }
+
+  .step-footer { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; }
+  .count-label { font-size: 12px; color: var(--muted); }
+  .next-btn { background: linear-gradient(135deg, #ffe030, #d4a000); color: #150900; border: none; padding: 11px 24px; font-size: 14px; font-weight: 600; border-radius: 14px; cursor: pointer; opacity: 0.35; pointer-events: none; transition: opacity 0.2s ease; font-family: inherit; }
+  .next-btn.enabled { opacity: 1; pointer-events: auto; }
+  .next-btn:hover.enabled { filter: brightness(1.08); }
+
+  .recap { background: linear-gradient(135deg, rgba(232,130,10,0.18), rgba(80,60,10,0.14)); backdrop-filter: blur(8px); border: 1px solid rgba(200,160,50,0.26); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px; color: var(--muted2); display: flex; align-items: center; gap: 8px; }
+  .recap .ok-dot { color: var(--ok); }
+  .recap b { color: rgba(255,230,140,0.88); font-weight: 600; }
+
+  .result-box { margin-top: 18px; padding: 14px 16px; border-radius: 14px; font-size: 13px; line-height: 1.55; display: none; }
+  .result-box.show { display: block; }
+  .result-ok { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.30); color: #9ef3c6; }
+  .result-warn { background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.30); color: #ffd166; }
+
+  .voice-picker-section { margin-top: 4px; }
+  .voice-picker-group { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+  .voice-chip { padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(200,160,50,0.24); background: linear-gradient(135deg, rgba(232,130,10,0.10), rgba(80,60,10,0.07)); color: rgba(230,195,100,0.75); cursor: pointer; font-size: 12.5px; font-family: inherit; transition: all 0.15s ease; user-select: none; }
+  .voice-chip:hover { border-color: rgba(220,175,60,0.44); }
+  .voice-chip.selected { border-color: rgba(245,185,50,0.68); background: linear-gradient(135deg, rgba(160,120,30,0.28), rgba(232,130,10,0.18)); color: #fff8e0; }
+  #mechanismPreview { margin-top: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(28,14,0,0.50); border: 1px dashed rgba(180,140,40,0.30); border-radius: 12px; font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--muted2); min-height: 18px; transition: all 0.2s ease; }
+
+  .name-input { width: 100%; background: rgba(28,14,0,0.50); border: 1px solid rgba(180,140,40,0.24); color: var(--ink); padding: 12px 14px; border-radius: 12px; font-size: 15px; font-family: inherit; margin-bottom: 8px; }
+  .name-input:focus { outline: none; border-color: var(--amber); }
+  .name-input::placeholder { color: rgba(200,160,50,0.28); }
+  .save-btn { background: #ffd000; color: #150900; border: none; padding: 12px 26px; font-size: 14px; font-weight: 700; border-radius: 14px; cursor: pointer; margin-top: 12px; font-family: inherit; }
+
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+  @media (max-width: 960px) {
+    html, body { height: auto; overflow-y: auto; }
+    #app { flex-direction: column; }
+    .left-col { width: 100%; position: relative; height: auto; flex-direction: row; flex-wrap: wrap; }
+    .center-col { width: 100%; height: auto; position: relative; padding: 16px; }
+    #centerQbitAvatar { max-width: 100%; height: 200px; }
+    .main-col { flex: none; width: 100%; overflow-y: visible; padding: 24px 18px 60px; padding-bottom: 100px; }
+    .step-footer { flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .next-btn { font-size: 12px; padding: 10px 16px; }
+  }
+  @media (max-width: 768px) {
+    #mobileBuildStrip {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(28,14,0,0.94);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(200,160,50,0.2);
+      padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      color: rgba(230,190,80,0.7);
+    }
+    .main-col {
+      padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+    #mobileBuildStrip span {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(200,160,50,0.25);
+      background: rgba(40,20,0,0.6);
+      white-space: nowrap;
+    }
+    #mobileBuildStrip span.boost-tag {
+      border-color: rgba(30,200,160,0.35);
+      color: rgba(100,240,195,0.85);
+    }
+  }
+</style>
+<script>
+  (function() {
+    var validMissionIds = ['harmonic_tuning', 'entanglement', 'coherence_stitching', 'energy_absorption', 'stealth_masking'];
+    var requested = new URLSearchParams(location.search).get('mission');
+    if (!requested || validMissionIds.indexOf(requested) === -1) {
+      console.error('[Forge] ROUTE ERROR: missing or invalid ?mission= param.', {
+        page: 'forge-chrona', missionParam: requested,
+        url: location.href, referrer: document.referrer
+      });
+      window.location.replace('/resonance.html');
+      return;
+    }
+    window.CONFIG = { missionId: requested };
+    console.log('[ROUTE TRACE]', { page: 'forge-chrona', missionParam: requested, loadedMissionId: requested, currentUrl: location.href });
+  })();
+</script>
+<script src="/js/analytics.js"></script>
+<script src="/js/architect-id.js"></script>
+<script src="/js/forged-qbits-store.js"></script>
+<script src="/js/continuum-request.js"></script>
+<script src="/js/qbit-recipe-mapper.js"></script>
+<script src="js/qbit-fx.js"></script>
+<script src="js/voice-picker.js"></script>
+</head>
+<body>
+
+<h1 class="sr-only">Quantum Forge — Chrona guardian, step by step build</h1>
+
+<div id="bgStage">
+  <video id="morphVideo" autoplay muted playsinline></video>
+  <img id="settledImage" src="" alt="" />
+  <div id="bgScrim"></div>
+</div>
+
+<div id="app">
+
+  <div class="left-col">
+    <div class="companion-box">
+      <div class="companion-name">Chrona</div>
+      <div class="companion-line" id="chronaLine">On the beat, Apprentice. Window's open — not for long.</div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Steps</div>
+      <div id="stepTracker"></div>
+    </div>
+    <div class="panel" id="buildSummaryPanel">
+      <div class="panel-label">Your build</div>
+      <div class="build-summary-line" id="buildSummaryLine">Nothing chosen yet</div>
+    </div>
+    <div class="machine-box">
+      <div class="machine-header">
+        <span class="machine-title">The Machine</span>
+        <span class="machine-status">partially online</span>
+      </div>
+      <button class="machine-btn" type="button" id="askMachineBtn">Ask the Machine</button>
+    </div>
+  </div>
+
+  <div class="center-col">
+    <div class="center-mission-label">Repairing</div>
+    <div class="center-mission-title" id="centerMissionTitle">Harmonic tuning</div>
+    <div class="center-mission-sub" id="centerMissionSub">make vibrations sing as one</div>
+
+    <div id="centerQbitAvatar">
+      <img id="qbitImg" src=""
+           alt="Qbit forming"
+           style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;display:block;transition:opacity 0.7s ease,filter 0.7s ease,transform 0.7s ease;
+                  opacity:0.04;filter:blur(8px);transform:scale(0.85);" />
+      <canvas id="qbitCanvas" width="512" height="512" style="display:none;"></canvas>
+      <div id="qbitGhostOverlay">
+        <div class="ghost-ring"></div>
+        <div class="ghost-label">Damaged</div>
+      </div>
+    </div>
+
+    <div id="centerBuildTags"></div>
+
+    <div id="timingMonitor">
+      <div class="tester-header">
+        <span class="tester-label">Timing Monitor</span>
+        <span class="tester-status status-none" id="testerStatus">No Lock</span>
+      </div>
+      <canvas id="waveCanvas" width="360" height="40"></canvas>
+      <div class="signal-bar-track">
+        <div class="signal-bar-fill" id="signalBarFill"></div>
+      </div>
+    </div>
+
+    <div class="install-slots-section">
+      <div id="slotSectionParts">
+        <div class="install-slots-label">Parts installed</div>
+        <div class="install-slots-row" id="partSlots">
+          <div class="install-slot" data-slot="part-0">—</div>
+          <div class="install-slot" data-slot="part-1">—</div>
+          <div class="install-slot" data-slot="part-2">—</div>
+        </div>
+      </div>
+      <div id="slotSectionFixes" style="display:none; opacity:0; transition: opacity 0.4s ease;">
+        <div class="install-slots-label" style="margin-top:4px;">Fixes applied</div>
+        <div class="install-slots-row" id="fixSlots">
+          <div class="install-slot" data-slot="fix-0">—</div>
+          <div class="install-slot" data-slot="fix-1">—</div>
+        </div>
+      </div>
+      <div id="slotSectionBoost" style="display:none; opacity:0; transition: opacity 0.4s ease;">
+        <div class="install-slots-label" style="margin-top:4px;">Boost engaged</div>
+        <div class="install-slots-row" id="boostSlots">
+          <div class="install-slot boost-slot" data-slot="boost-0">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-col">
+    <div class="main-inner">
+
+      <!-- STEP 1: PARTS -->
+      <div class="step-panel active" data-step="1">
+        <div class="step-label">Install 3 of 6 parts</div>
+        <div class="step-sub" id="partsInstruction">Tap and drag the correct mod on its part.</div>
+        <div id="partsGroups"></div>
+        <div class="step-footer">
+          <span class="count-label" id="partsCount">0 of 3 installed</span>
+          <button class="next-btn" id="partsNext">Next: apply fixes</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: FIXES -->
+      <div class="step-panel" data-step="2">
+        <div class="recap" id="recapParts"></div>
+        <div class="step-label">Apply 2 quantum fixes</div>
+        <div class="step-sub">Tap a fix to apply it to your build.</div>
+        <div class="component-tray" id="fixesRow"></div>
+        <div class="step-footer">
+          <button class="next-btn enabled" id="fixesBack" style="background:rgba(140,110,30,0.15);color:rgba(230,190,80,0.6);border:1px solid rgba(140,110,30,0.25);">← Parts</button>
+          <span class="count-label" id="fixesCount">0 of 2 applied</span>
+          <button class="next-btn" id="fixesNext">Next: engage boost</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: BOOST -->
+      <div class="step-panel" data-step="3">
+        <div class="recap" id="recapParts2"></div>
+        <div class="recap" id="recapFixes"></div>
+        <div class="step-label">Engage 1 power boost</div>
+        <div class="step-sub">Reason it out — not taught in the chambers.</div>
+        <div class="component-tray" id="boostRow"></div>
+        <div class="step-footer">
+          <button class="next-btn enabled" id="boostBack" style="background:rgba(140,110,30,0.15);color:rgba(230,190,80,0.6);border:1px solid rgba(140,110,30,0.25);">← Fixes</button>
+          <span class="count-label" id="boostCount">0 of 1 engaged</span>
+          <button class="next-btn" id="boostNext">Next: test the fix</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: TEST -->
+      <div class="step-panel" data-step="4">
+        <div class="recap" id="recapParts3"></div>
+        <div class="recap" id="recapFixes2"></div>
+        <div class="recap" id="recapBoost"></div>
+        <div class="step-label">Test the fix</div>
+        <div class="step-sub">Run the build. See if the timing holds.</div>
+        <button class="next-btn enabled" id="boostBackFromTest" style="background:rgba(140,110,30,0.15);color:rgba(230,190,80,0.6);border:1px solid rgba(140,110,30,0.25);margin-top:8px;">← Boost</button>
+        <button class="next-btn enabled" id="testBtn" style="margin-top: 8px;">Test the fix</button>
+        <div class="result-box" id="resultBox"></div>
+        <div class="step-footer" id="testFooter" style="display: none;">
+          <span></span>
+          <button class="next-btn enabled" id="testNext">Next: name your Qbit</button>
+        </div>
+      </div>
+
+      <!-- STEP 5: NAME -->
+      <div class="step-panel" data-step="5">
+        <div class="step-label">Your Qbit is forged</div>
+        <div class="step-sub">This Qbit formed from your repair. Name them.</div>
+        <div class="group-label" style="margin-top: 22px;">Name them</div>
+        <input class="name-input" id="qbitNameInput" placeholder="Name your quantum creation..." maxlength="30" />
+        <div class="voice-picker-section">
+          <div class="group-label" style="margin-top: 18px;">How do they work?</div>
+          <div id="voicePicker_how" class="voice-picker-group"></div>
+          <div class="group-label">When do they fail?</div>
+          <div id="voicePicker_fails" class="voice-picker-group"></div>
+          <div class="group-label">What are they like?</div>
+          <div id="voicePicker_like" class="voice-picker-group"></div>
+          <div id="mechanismPreview">Select all three to describe your mechanism...</div>
+          <textarea id="qbitStory" style="display:none"></textarea>
+        </div>
+        <button class="save-btn" id="saveBtn">Save Qbit</button>
+        <div class="result-box show result-ok" id="saveConfirm" style="display: none;"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="machineChatPanel">
+  <div class="machine-panel-header">
+    <span class="machine-panel-title">The Machine</span>
+    <button class="machine-panel-close" id="machineCloseBtn">✕</button>
+  </div>
+  <div class="machine-context-strip" id="machineContextStrip">Loading context…</div>
+  <div class="machine-messages" id="machineMessages"></div>
+  <div class="machine-input-row">
+    <input class="machine-input" id="machineInput" type="text" placeholder="Ask about parts, fixes, or why something didn't work…" maxlength="200" />
+    <button class="machine-send-btn" id="machineSendBtn">↑</button>
+  </div>
+</div>
+
+<div id="mobileBuildStrip" style="display:none;"></div>
+
+<script>
+  const PARTS_MASTER = {
+    shimmer_splitter: { name: 'Shimmer Splitter', desc: 'Split Signal Paths', line: "Path splits. Good — more options, more time." },
+    field_mirror:     { name: 'Field Mirror', desc: 'Reflect Signal Back', line: "Field Mirror. Bounces the signal back across the timeline. Smart." },
+    choice_buffer:    { name: 'Choice Buffer', desc: 'Hold Signal Open', line: "Choice Buffer. Holds the window open. That one I like." },
+    phase_prism:      { name: 'Phase Prism', desc: 'Align Wave Timing', line: "Phase Prism aligns the timing. Past-present-future, one clean line." },
+    coil_phase:       { name: 'Coil Phase', desc: 'Generate Timing Pulses', line: "Coil Phase. Generates the pulse. On the beat, Apprentice." },
+    delay_gate:       { name: 'Delay Gate', desc: 'Slow Fast Paths', line: "Delay Gate slows the fast paths. Sometimes the best window is the one you didn't rush." },
+    readout:          { name: 'Readout', desc: 'Measure Final Result', line: "Readout in. Now the clock can stop. We'll see what it found." },
+    hall_sensor:      { name: 'Hall Sensor', desc: 'Detect Field Changes', line: "Hall Sensor. Detects the shift. I always know when the field changes." },
+    light_catcher:    { name: 'Light Catcher', desc: 'Catch Fading Signals', line: "Light Catcher. Grabs the signal before the window closes. Good instinct." }
+  };
+  const GROUP_OF = { shimmer_splitter: 'split', field_mirror: 'split', choice_buffer: 'split', phase_prism: 'modulate', coil_phase: 'modulate', delay_gate: 'modulate', readout: 'lock', hall_sensor: 'lock', light_catcher: 'lock' };
+  const GROUP_LABELS = { split: 'Split / open signal', modulate: 'Modulate / phase / time', lock: 'Lock / read result' };
+  function buildPartGroups(exposedIds) {
+    const byGroup = { split: [], modulate: [], lock: [] };
+    exposedIds.forEach(id => byGroup[GROUP_OF[id]].push(Object.assign({ id: id }, PARTS_MASTER[id])));
+    return ['split', 'modulate', 'lock'].filter(g => byGroup[g].length).map(g => ({ label: GROUP_LABELS[g], parts: byGroup[g] }));
+  }
+
+  const MISSIONS = {
+    harmonic_tuning: { id: 'harmonic_tuning', title: 'Harmonic tuning', sub: 'make vibrations sing as one', roleTitle: 'Harmonic Tuning — make vibrations sing as one', video: '/sprites/harmonic_fork_base_512.mp4', partGroups: buildPartGroups(['shimmer_splitter', 'phase_prism', 'readout', 'field_mirror', 'coil_phase', 'hall_sensor']), solutions: [{ id: 'harmonic_optical', name: 'Optical Harmonic', parts: ['shimmer_splitter', 'phase_prism', 'readout'], fixes: ['F::', 'C//'], boost: 'PH~' }, { id: 'harmonic_magnetic', name: 'Magnetic Harmonic', parts: ['field_mirror', 'coil_phase', 'hall_sensor'], fixes: ['F::', 'C//'], boost: 'N0' }] },
+    entanglement: { id: 'entanglement', title: 'Entanglement', sub: 'distant channels act as one', roleTitle: 'Entanglement — distant channels act as one', video: '/sprites/entanglement.mp4', partGroups: buildPartGroups(['shimmer_splitter', 'delay_gate', 'readout', 'choice_buffer', 'field_mirror', 'hall_sensor']), solutions: [{ id: 'entangle_optical', name: 'Optical Twin', parts: ['shimmer_splitter', 'delay_gate', 'readout'], fixes: ['SH', 'F::'], boost: 'EN≡' }, { id: 'entangle_stable', name: 'Grounded Twin', parts: ['choice_buffer', 'field_mirror', 'hall_sensor'], fixes: ['SH', 'C//'], boost: 'N0' }] },
+    coherence_stitching: { id: 'coherence_stitching', title: 'Coherence stitching', sub: 'keep waves in step', roleTitle: 'Coherence Stitching — keep waves in step', video: '/sprites/coherence_stitching.mp4', partGroups: buildPartGroups(['field_mirror', 'coil_phase', 'hall_sensor', 'shimmer_splitter', 'phase_prism', 'readout']), solutions: [{ id: 'coherence_magnetic', name: 'Magnetic Weave', parts: ['field_mirror', 'coil_phase', 'hall_sensor'], fixes: ['SH', 'F::'], boost: 'N0' }, { id: 'coherence_optical', name: 'Optical Repair', parts: ['shimmer_splitter', 'phase_prism', 'readout'], fixes: ['SH', 'F::'], boost: 'PH~' }] },
+    energy_absorption: { id: 'energy_absorption', title: 'Energy absorption', sub: 'tame excess into calm', roleTitle: 'Energy Absorption — tame excess into calm', video: '/sprites/energy absorption.mp4', partGroups: buildPartGroups(['choice_buffer', 'delay_gate', 'light_catcher', 'field_mirror', 'coil_phase', 'hall_sensor']), solutions: [{ id: 'absorption_timing', name: 'Timing Drain', parts: ['choice_buffer', 'delay_gate', 'light_catcher'], fixes: ['SH', 'C//'], boost: 'N0' }, { id: 'absorption_magnetic', name: 'Magnetic Damping', parts: ['field_mirror', 'coil_phase', 'hall_sensor'], fixes: ['SH', 'C//'], boost: 'N0' }] },
+    stealth_masking: { id: 'stealth_masking', title: 'Stealth / masking', sub: 'hide the signal in plain sight', roleTitle: 'Stealth / Masking — hide the signal in plain sight', video: '/sprites/stealth_masking.mp4', partGroups: buildPartGroups(['shimmer_splitter', 'phase_prism', 'light_catcher', 'choice_buffer', 'delay_gate', 'readout']), solutions: [{ id: 'stealth_optical', name: 'Optical Mask', parts: ['shimmer_splitter', 'phase_prism', 'light_catcher'], fixes: ['F::', 'C//'], boost: 'G0' }, { id: 'stealth_timing', name: 'Timing Slip', parts: ['choice_buffer', 'delay_gate', 'light_catcher'], fixes: ['SH', 'C//'], boost: 'G0' }] }
+  };
+
+  const MISSION_DATA = MISSIONS[window.CONFIG.missionId];
+  const MISSION = { id: MISSION_DATA.id, title: MISSION_DATA.title, sub: MISSION_DATA.sub, roleTitle: MISSION_DATA.roleTitle, video: MISSION_DATA.video, solutions: MISSION_DATA.solutions };
+  const PART_GROUPS = MISSION_DATA.partGroups;
+  const ALL_PARTS = PART_GROUPS.flatMap(g => g.parts);
+
+  const FIXES = [
+    { id: 'SH', name: 'SH', sub: 'Superpose', desc: 'Keeps multiple signal possibilities open during testing.', line: "SH holds every route open at once. Past, present, future — all live. Good." },
+    { id: 'F::', name: 'F::', sub: 'FringeGate', desc: 'Shifts signal timing to improve synchronization.', line: "F:: nudges the timing into sync. Small shift — the window lands cleaner." },
+    { id: 'C//', name: 'C//', sub: 'Collapse', desc: 'Locks the system onto one stable result.', line: "C// collapses to one. The window closes. Timing test can run." }
+  ];
+  const BOOSTS = [
+    { id: 'PH~', name: 'PH~', sub: 'PhaseLock', desc: 'Amplifies timing resonance between synchronized signals.', line: "PH~ locks the phase. The beat lands exactly on the tick." },
+    { id: 'EN≡', name: 'EN≡', sub: 'Entangle', desc: 'Links channels so they act together.', line: "EN≡ links them. Two channels, one clock. On the beat." },
+    { id: 'N0', name: 'N0', sub: 'Null', desc: 'Drains excess energy, goes quiet.', line: "N0 drains the excess. Quiet is its own kind of timing." },
+    { id: 'G0', name: 'G0', sub: 'Ghost', desc: 'Slips the signal through barriers unseen.', line: "G0 slips through. Signal hides in the gap between ticks." }
+  ];
+  const STEPS = ['Parts', 'Fixes', 'Boost', 'Test the fix', 'Name Qbit'];
+
+  let currentStep = 1;
+  let selectedParts = [];
+  let selectedFixes = [];
+  let selectedBoost = null;
+  window.getForgeContext = function() {
+    return {
+      mission_id:     MISSION.id,
+      mission_name:   MISSION.title,
+      selected_parts: selectedParts.map(function(id) { var p = ALL_PARTS.find(function(q) { return q.id === id; }); return p ? p.name : id; }),
+      selected_fixes: selectedFixes.slice(),
+      selected_boost: selectedBoost || null
+    };
+  };
+  let tested = false;
+  const _forgeEnteredAt = Date.now();
+
+  function initBackground() {
+    const video = document.getElementById('morphVideo');
+    const stillImg = document.getElementById('settledImage');
+    video.src = '/assets/Chrona.mp4';
+    stillImg.src = '/sprites/chrona.png';
+    function settle() {
+      document.getElementById('morphVideo').style.opacity = '0';
+      document.getElementById('settledImage').style.opacity = '1';
+      document.getElementById('bgScrim').style.opacity = '1';
+      document.getElementById('app').style.opacity = '1';
+    }
+    video.addEventListener('ended', settle);
+    video.addEventListener('error', settle);
+    setTimeout(settle, 3500);
+  }
+
+  function renderStepTracker() {
+    const wrap = document.getElementById('stepTracker');
+    wrap.innerHTML = STEPS.map((s, i) => {
+      const n = i + 1;
+      let cls = 'step-row', icon = '';
+      if (n < currentStep) { cls += ' done'; icon = '<span class="check-icon">&#10003;</span>'; }
+      else if (n === currentStep) { cls += ' active'; }
+      else { icon = '<span class="lock-icon">&#128274;</span>'; }
+      return '<div class="' + cls + '"><span class="num">' + n + '</span>' + s + icon + '</div>';
+    }).join('');
+  }
+
+  function revealSlot(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = 'block';
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+  }
+
+  function goToStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.step-panel').forEach(p => { p.classList.toggle('active', Number(p.dataset.step) === n); });
+    renderStepTracker(); renderRecaps();
+    if (n >= 2) revealSlot('slotSectionFixes');
+    if (n >= 3) revealSlot('slotSectionBoost');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderRecaps() {
+    const partNames = selectedParts.map(id => ALL_PARTS.find(p => p.id === id).name).join(', ');
+    const fixNames = selectedFixes.join(' + ');
+    const boostName = selectedBoost || '';
+    const partsRecapHtml = '<span class="ok-dot">&#10003;</span> Parts: <b>' + partNames + '</b>';
+    const fixesRecapHtml = '<span class="ok-dot">&#10003;</span> Fixes: <b>' + fixNames + '</b>';
+    const boostRecapHtml = '<span class="ok-dot">&#10003;</span> Boost: <b>' + boostName + '</b>';
+    const r1 = document.getElementById('recapParts'); if (r1) r1.innerHTML = partsRecapHtml;
+    const r2 = document.getElementById('recapParts2'); if (r2) r2.innerHTML = partsRecapHtml;
+    const r3 = document.getElementById('recapParts3'); if (r3) r3.innerHTML = partsRecapHtml;
+    const r4 = document.getElementById('recapFixes'); if (r4) r4.innerHTML = fixesRecapHtml;
+    const r5 = document.getElementById('recapFixes2'); if (r5) r5.innerHTML = fixesRecapHtml;
+    const r6 = document.getElementById('recapBoost'); if (r6) r6.innerHTML = boostRecapHtml;
+  }
+
+  function renderBuildSummary() {
+    const box = document.getElementById('buildSummaryLine');
+    if (selectedParts.length === 0) { box.innerHTML = 'Waiting for first part&hellip;'; return; }
+    const parts = '<span class="filled">&#10003; ' + selectedParts.map(id => ALL_PARTS.find(p => p.id === id).name).join('<br>&#10003; ') + '</span>';
+    let html = 'Parts:<br>' + parts;
+    if (selectedFixes.length > 0) html += '<br><br>Fixes:<br><span class="filled">&#10003; ' + selectedFixes.join('<br>&#10003; ') + '</span>';
+    if (selectedBoost) html += '<br><br>Boost:<br><span class="filled">&#10003; ' + selectedBoost + '</span>';
+    box.innerHTML = html;
+  }
+
+  function setChronaLine(text) {
+    const el = document.getElementById('chronaLine');
+    const box = el.closest('.companion-box');
+    el.style.opacity = '0';
+    setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 180);
+    if (box) {
+      box.classList.remove('hint-flash'); void box.offsetWidth;
+      box.classList.add('hint-flash'); setTimeout(() => box.classList.remove('hint-flash'), 600);
+    }
+  }
+
+  function tapRipple(card, e) {
+    const r = document.createElement('div');
+    r.className = 'tap-ripple';
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX || rect.left + rect.width/2) - rect.left;
+    const y = (e.clientY || rect.top + rect.height/2) - rect.top;
+    r.style.left = (x - 5) + 'px'; r.style.top = (y - 5) + 'px';
+    card.appendChild(r); setTimeout(() => r.remove(), 500);
+  }
+
+  function updateInstallSlots() {
+    const partSlotEls = document.querySelectorAll('#partSlots .install-slot');
+    partSlotEls.forEach((slot, i) => {
+      const id = selectedParts[i];
+      if (id) { slot.textContent = ALL_PARTS.find(p => p.id === id).name; slot.classList.add('filled'); }
+      else { slot.textContent = '—'; slot.classList.remove('filled'); }
+    });
+    const fixSlotEls = document.querySelectorAll('#fixSlots .install-slot');
+    fixSlotEls.forEach((slot, i) => {
+      const id = selectedFixes[i];
+      if (id) { slot.textContent = id; slot.classList.add('filled'); }
+      else { slot.textContent = '—'; slot.classList.remove('filled'); }
+    });
+    const boostSlotEl = document.querySelector('#boostSlots .install-slot');
+    if (boostSlotEl) {
+      if (selectedBoost) { boostSlotEl.textContent = selectedBoost; boostSlotEl.classList.add('filled', 'boost-slot'); }
+      else { boostSlotEl.textContent = '—'; boostSlotEl.classList.remove('filled'); boostSlotEl.classList.add('boost-slot'); }
+    }
+    if (window.innerWidth <= 768) {
+      const strip = document.getElementById('mobileBuildStrip');
+      if (strip) {
+        strip.style.display = 'flex';
+        const partTags = selectedParts.map(id => '<span>' + ALL_PARTS.find(p => p.id === id).name + '</span>').join('');
+        const fixTags = selectedFixes.map(id => '<span>' + id + '</span>').join('');
+        const boostTag = selectedBoost ? '<span class="boost-tag">' + selectedBoost + '</span>' : '';
+        const content = partTags + fixTags + boostTag;
+        strip.innerHTML = content || '<span style="opacity:0.4">Nothing selected yet</span>';
+      }
+    }
+  }
+
+  function flashSlot(slotEl) {
+    slotEl.classList.remove('flash'); void slotEl.offsetWidth;
+    slotEl.classList.add('flash'); setTimeout(() => slotEl.classList.remove('flash'), 450);
+  }
+
+  function renderParts() {
+    const wrap = document.getElementById('partsGroups');
+    wrap.innerHTML = PART_GROUPS.map(g => {
+      const cards = g.parts.map(p => {
+        const isSel = selectedParts.includes(p.id);
+        return '<div class="component-card' + (isSel ? ' installed' : '') + '" data-id="' + p.id + '" data-kind="part">' +
+          '<div class="component-info"><div class="component-name">' + p.name + '</div>' + (!isSel ? '<div class="component-desc">' + p.desc + '</div>' : '') + '</div>' +
+          '<div class="component-action">' + (isSel ? 'Installed ✓' : 'Install') + '</div></div>';
+      }).join('');
+      return '<div class="group-label">' + g.label + '</div><div class="component-tray">' + cards + '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.component-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const id = card.dataset.id;
+        const part = ALL_PARTS.find(p => p.id === id);
+        const idx = selectedParts.indexOf(id);
+        if (idx === -1) {
+          if (selectedParts.length < 3) {
+            selectedParts.push(id);
+            if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_part_selected', mission_id: MISSION.id, part_id: id, part_name: part.name, parts_count: selectedParts.length, forge_elapsed_ms: Date.now() - _forgeEnteredAt });
+            setChronaLine(part.line); tapRipple(card, e); updateHum();
+            const emptySlot = document.querySelector('#partSlots .install-slot:not(.filled)');
+            if (emptySlot) setTimeout(() => flashSlot(emptySlot), 80);
+          }
+        } else {
+          selectedParts.splice(idx, 1); setChronaLine("Pulled. Window resets. Try again."); updateHum();
+        }
+        renderParts(); renderBuildSummary(); updatePartsFooter(); updateInstallSlots(); updateQbitCenter();
+        if (selectedParts.length === 3) {
+          const sortedPick = [...selectedParts].sort();
+          const correct = MISSION.solutions.some(sol => JSON.stringify([...sol.parts].sort()) === JSON.stringify(sortedPick));
+          setTimeout(() => setChronaLine(correct
+            ? "Choices stayed open — timing test can run. Proceed."
+            : "Something's off-beat. That combination won't lock. Try another."), 450);
+        }
+      });
+    });
+  }
+
+  function updatePartsFooter() {
+    document.getElementById('partsCount').textContent = selectedParts.length + ' of 3 installed';
+    document.getElementById('partsNext').classList.toggle('enabled', selectedParts.length === 3);
+  }
+
+  function renderFixes() {
+    const wrap = document.getElementById('fixesRow');
+    wrap.innerHTML = FIXES.map(f => {
+      const isSel = selectedFixes.includes(f.id);
+      return '<div class="component-card' + (isSel ? ' installed' : '') + '" data-id="' + f.id + '" data-kind="fix">' +
+        '<div class="component-info"><div class="component-name">' + f.name + ' — ' + f.sub + '</div>' + (!isSel ? '<div class="component-desc">' + f.desc + '</div>' : '') + '</div>' +
+        '<div class="component-action">' + (isSel ? 'Applied ✓' : 'Apply') + '</div></div>';
+    }).join('');
+
+    wrap.querySelectorAll('.component-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const id = card.dataset.id;
+        const fix = FIXES.find(f => f.id === id);
+        const idx = selectedFixes.indexOf(id);
+        if (idx === -1) {
+          if (selectedFixes.length < 2) {
+            selectedFixes.push(id);
+            if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_fix_selected', mission_id: MISSION.id, fix_id: id, fix_name: fix.name, selected_fixes: [...selectedFixes], forge_elapsed_ms: Date.now() - _forgeEnteredAt });
+            setChronaLine(fix.line); tapRipple(card, e); updateHum();
+            const emptySlot = document.querySelector('#fixSlots .install-slot:not(.filled)');
+            if (emptySlot) setTimeout(() => flashSlot(emptySlot), 80);
+          }
+        } else {
+          selectedFixes.splice(idx, 1); setChronaLine("Removed. Clock keeps running."); updateHum();
+        }
+        renderFixes(); renderBuildSummary(); updateFixesFooter(); updateInstallSlots(); updateQbitCenter();
+      });
+    });
+  }
+
+  function updateFixesFooter() {
+    document.getElementById('fixesCount').textContent = selectedFixes.length + ' of 2 applied';
+    document.getElementById('fixesNext').classList.toggle('enabled', selectedFixes.length === 2);
+  }
+
+  function renderBoost() {
+    const wrap = document.getElementById('boostRow');
+    wrap.innerHTML = BOOSTS.map(b => {
+      const isSel = selectedBoost === b.id;
+      return '<div class="component-card' + (isSel ? ' installed boost-installed' : '') + '" data-id="' + b.id + '" data-kind="boost">' +
+        '<div class="component-info"><div class="component-name">' + b.name + ' — ' + b.sub + '</div>' + (!isSel ? '<div class="component-desc">' + b.desc + '</div>' : '') + '</div>' +
+        '<div class="component-action">' + (isSel ? 'Engaged ✓' : 'Engage') + '</div></div>';
+    }).join('');
+
+    wrap.querySelectorAll('.component-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const id = card.dataset.id;
+        const boost = BOOSTS.find(b => b.id === id);
+        selectedBoost = (selectedBoost === id) ? null : id;
+        if (selectedBoost) {
+          if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_boost_selected', mission_id: MISSION.id, boost_id: id, boost_name: boost.name, forge_elapsed_ms: Date.now() - _forgeEnteredAt });
+          setChronaLine(boost.line); tapRipple(card, e);
+          const boostSlot = document.querySelector('#boostSlots .install-slot');
+          if (boostSlot) setTimeout(() => flashSlot(boostSlot), 80);
+        }
+        updateHum(); renderBoost(); renderBuildSummary(); updateBoostFooter(); updateInstallSlots(); updateQbitCenter();
+      });
+    });
+  }
+
+  function updateBoostFooter() {
+    document.getElementById('boostCount').textContent = (selectedBoost ? 1 : 0) + ' of 1 engaged';
+    document.getElementById('boostNext').classList.toggle('enabled', !!selectedBoost);
+  }
+
+  function matchesAnySolution() {
+    const pickParts = [...selectedParts].sort();
+    const pickFixes = [...selectedFixes].sort();
+    return MISSION.solutions.some(sol =>
+      JSON.stringify(pickParts) === JSON.stringify([...sol.parts].sort()) &&
+      JSON.stringify(pickFixes) === JSON.stringify([...sol.fixes].sort()) &&
+      selectedBoost === sol.boost
+    );
+  }
+
+  function runTest() {
+    const fullMatch = matchesAnySolution();
+    if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_validation_result', mission_id: MISSION.id, success: fullMatch, parts: [...selectedParts], fixes: [...selectedFixes], boost: selectedBoost, forge_elapsed_ms: Date.now() - _forgeEnteredAt });
+    const box = document.getElementById('resultBox');
+    const testFooter = document.getElementById('testFooter');
+    const testNext = document.getElementById('testNext');
+    box.classList.add('show');
+    if (fullMatch) {
+      box.className = 'result-box show result-ok';
+      box.textContent = 'Locked. Choices stayed open, timing held, window closed clean. Build complete.';
+      setChronaLine("Satisfied. Exactly on the tick. Timing test passed. You did that.");
+      testNext.textContent = 'Next: name your Qbit';
+      testNext.onclick = () => { goToStep(5); renderQbitStage(); };
+      testFooter.style.display = 'flex';
+      playOnlineBurst();
+      tested = true;
+    } else {
+      box.className = 'result-box show result-warn';
+      box.textContent = "No locks yet. Something in this combination is off-beat — the window didn't close clean.";
+      setChronaLine("Not locked yet. Go back and try a different combination.");
+      const sp = [...selectedParts].sort();
+      const sf = [...selectedFixes].sort();
+      const partsOk = MISSION.solutions.some(s => JSON.stringify([...s.parts].sort()) === JSON.stringify(sp));
+      const fixesOk = partsOk && MISSION.solutions.some(s =>
+        JSON.stringify([...s.parts].sort()) === JSON.stringify(sp) &&
+        JSON.stringify([...s.fixes].sort()) === JSON.stringify(sf)
+      );
+      testNext.textContent = 'Try again';
+      testNext.onclick = () => {
+        box.classList.remove('show');
+        testFooter.style.display = 'none';
+        tested = false;
+        if (!partsOk) {
+          selectedParts = []; selectedFixes = []; selectedBoost = null;
+          renderParts(); renderFixes(); renderBoost();
+          renderBuildSummary(); updatePartsFooter(); updateFixesFooter(); updateBoostFooter();
+          updateInstallSlots(); updateQbitCenter(); goToStep(1);
+        } else if (!fixesOk) {
+          selectedFixes = []; selectedBoost = null;
+          renderFixes(); renderBoost();
+          renderBuildSummary(); updateFixesFooter(); updateBoostFooter();
+          updateInstallSlots(); updateQbitCenter(); goToStep(2);
+        } else {
+          selectedBoost = null;
+          renderBoost(); renderBuildSummary(); updateBoostFooter();
+          updateInstallSlots(); updateQbitCenter(); goToStep(3);
+        }
+      };
+      testFooter.style.display = 'flex';
+    }
+    setTimeout(() => {
+      document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+
+  /* ===== TIMING MONITOR ===== */
+  (function() {
+    const LEVELS = [
+      { min: 0, label: 'No Lock',    cls: 'status-none',     amp: 0.04, freq: 0.6,  pct: 0   },
+      { min: 1, label: 'Weak Pulse', cls: 'status-weak',     amp: 0.16, freq: 1.0,  pct: 17  },
+      { min: 2, label: 'Building',   cls: 'status-building', amp: 0.30, freq: 1.6,  pct: 34  },
+      { min: 3, label: 'On Beat',    cls: 'status-stable',   amp: 0.46, freq: 2.2,  pct: 51  },
+      { min: 4, label: 'Aligned',    cls: 'status-aligned',  amp: 0.62, freq: 2.8,  pct: 72  },
+      { min: 6, label: 'Locked',     cls: 'status-online',   amp: 0.80, freq: 3.6,  pct: 100 }
+    ];
+    let phase = 0, currentLevel = LEVELS[0], targetPct = 0, displayPct = 0;
+    const canvas = document.getElementById('waveCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    function getLevel(count) { let l = LEVELS[0]; for (const lvl of LEVELS) { if (count >= lvl.min) l = lvl; } return l; }
+    function drawWave() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const amp = currentLevel.amp * (H / 2) * 0.85, freq = currentLevel.freq;
+      ctx.beginPath();
+      for (let x = 0; x < W; x++) { const noise = Math.sin(x * 0.20 + phase * 0.28) * amp * 0.12; x === 0 ? ctx.moveTo(x, H/2 + noise) : ctx.lineTo(x, H/2 + noise); }
+      ctx.strokeStyle = 'rgba(200,150,40,0.10)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.beginPath();
+      for (let x = 0; x < W; x++) {
+        const t = (x / W) * Math.PI * 2 * freq + phase;
+        const sine = Math.sin(t), square = Math.sign(sine) * Math.pow(Math.abs(sine), 0.35);
+        x === 0 ? ctx.moveTo(x, H/2 + (sine * 0.4 + square * 0.6) * amp) : ctx.lineTo(x, H/2 + (sine * 0.4 + square * 0.6) * amp);
+      }
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0, 'rgba(180,140,0,0.38)'); grad.addColorStop(0.5, 'rgba(255,210,0,0.95)'); grad.addColorStop(1, 'rgba(30,200,160,0.45)');
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
+      phase += 0.038 + currentLevel.amp * 0.035;
+      displayPct += (targetPct - displayPct) * 0.06;
+      document.getElementById('signalBarFill').style.width = displayPct.toFixed(1) + '%';
+      requestAnimationFrame(drawWave);
+    }
+    window.updateTimingMonitor = function(selectionCount) {
+      const lvl = getLevel(selectionCount);
+      if (lvl !== currentLevel) {
+        currentLevel = lvl; targetPct = lvl.pct;
+        const statusEl = document.getElementById('testerStatus');
+        statusEl.textContent = lvl.label; statusEl.className = 'tester-status ' + lvl.cls;
+      }
+    };
+    drawWave();
+  })();
+
+  function bestOverlap() {
+    if (selectedParts.length === 0) return 0;
+    return Math.max(...MISSION.solutions.map(sol => selectedParts.filter(id => sol.parts.includes(id)).length));
+  }
+
+  function bestFixOverlap() {
+    if (selectedFixes.length === 0) return 0;
+    const sp = [...selectedParts].sort();
+    const matchingSols = MISSION.solutions.filter(sol => JSON.stringify([...sol.parts].sort()) === JSON.stringify(sp));
+    if (matchingSols.length === 0) return 0;
+    return Math.max(...matchingSols.map(sol => selectedFixes.filter(id => sol.fixes.includes(id)).length));
+  }
+
+  function updateQbitCenter() {
+    const tagsWrap = document.getElementById('centerBuildTags');
+    const partTags = selectedParts.map(id => '<span class="qbit-tag">' + ALL_PARTS.find(p => p.id === id).name + '</span>').join('');
+    const fixTags = selectedFixes.map(id => '<span class="qbit-tag">' + id + '</span>').join('');
+    const boostTag = selectedBoost ? '<span class="qbit-tag boost-tag">' + selectedBoost + '</span>' : '';
+    tagsWrap.innerHTML = partTags + fixTags + boostTag;
+
+    tagsWrap.querySelectorAll('.qbit-tag').forEach(t => { t.style.cssText = 'font-size:11.5px;font-family:ui-monospace,monospace;padding:5px 10px;border-radius:8px;border:1px dashed rgba(200,155,40,0.35);color:rgba(240,210,120,0.78);background:rgba(12,18,8,0.4);'; });
+    tagsWrap.querySelectorAll('.boost-tag').forEach(t => { t.style.borderColor = 'rgba(30,200,160,0.42)'; t.style.color = 'rgba(100,240,195,0.88)'; });
+
+    window.state = window.state || {};
+    window.state.selected = { parts: selectedParts, fixes: selectedFixes, boosts: selectedBoost ? [selectedBoost] : [] };
+    if (window.QbitFX && window.QbitFX.refresh) window.QbitFX.refresh();
+
+    const selCount = selectedParts.length + selectedFixes.length + (selectedBoost ? 1 : 0);
+    if (window.updateTimingMonitor) window.updateTimingMonitor(selCount);
+
+    const qImg = document.getElementById('qbitImg');
+    const ghost = document.getElementById('qbitGhostOverlay');
+
+    if (currentStep === 1) {
+      const allPartsCorrect = MISSION.solutions.some(sol =>
+        JSON.stringify([...selectedParts].sort()) === JSON.stringify([...sol.parts].sort())
+      );
+      if (allPartsCorrect) {
+        if (ghost) ghost.style.display = 'none';
+        if (qImg) { qImg.style.transition = 'opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease'; qImg.style.opacity = '0.55'; qImg.style.filter = 'blur(1.5px)'; qImg.style.transform = 'scale(0.97)'; }
+      } else {
+        if (ghost) ghost.style.display = '';
+        if (qImg) { qImg.style.transition = 'none'; qImg.style.opacity = '0.04'; qImg.style.filter = 'blur(8px)'; qImg.style.transform = 'scale(0.85)'; }
+      }
+    } else if (currentStep === 2) {
+      if (ghost) ghost.style.display = 'none';
+      const fixOverlap = bestFixOverlap();
+      const FIX_STAGES = [{ opacity: 0.55, blur: 1.5, scale: 0.97 }, { opacity: 0.72, blur: 0.8, scale: 0.99 }, { opacity: 0.86, blur: 0.3, scale: 1.0 }];
+      const fs = FIX_STAGES[Math.min(fixOverlap, 2)];
+      if (qImg) { qImg.style.transition = 'opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease'; qImg.style.opacity = fs.opacity; qImg.style.filter = 'blur(' + fs.blur + 'px)'; qImg.style.transform = 'scale(' + fs.scale + ')'; }
+    } else if (currentStep === 3) {
+      if (ghost) ghost.style.display = 'none';
+      const boostCorrect = selectedBoost && MISSION.solutions.some(sol =>
+        JSON.stringify([...selectedParts].sort()) === JSON.stringify([...sol.parts].sort()) &&
+        JSON.stringify([...selectedFixes].sort()) === JSON.stringify([...sol.fixes].sort()) &&
+        sol.boost === selectedBoost
+      );
+      if (qImg) { qImg.style.transition = 'opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease'; qImg.style.opacity = boostCorrect ? '0.97' : '0.75'; qImg.style.filter = boostCorrect ? 'blur(0px)' : 'blur(0.8px)'; qImg.style.transform = boostCorrect ? 'scale(1.01)' : 'scale(0.99)'; }
+    } else {
+      if (ghost) ghost.style.display = 'none';
+    }
+  }
+
+  function renderQbitStage() {
+    const qImg = document.getElementById('qbitImg');
+    if (qImg) {
+      qImg.style.transition = 'opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease';
+      qImg.style.opacity = 1; qImg.style.filter = 'brightness(1.25) blur(0px)'; qImg.style.transform = 'scale(1.02)';
+      setTimeout(function() {
+        qImg.style.display = 'none';
+        const canvas = document.getElementById('qbitCanvas');
+        if (canvas) canvas.style.display = 'block';
+        if (window.QbitFX) window.QbitFX.setBaseFromURL(MISSION.video);
+        else console.warn('[Forge] QbitFX not loaded yet');
+      }, 800);
+    } else {
+      const canvas = document.getElementById('qbitCanvas');
+      if (canvas) canvas.style.display = 'block';
+      if (window.QbitFX) window.QbitFX.setBaseFromURL(MISSION.video);
+    }
+    document.getElementById('centerQbitAvatar').classList.add('stabilized');
+    if (window.VoicePicker) { window._forgeStepReached = 2; window.VoicePicker.render(MISSION.id); }
+    else console.warn('[Forge] VoicePicker not loaded yet');
+  }
+
+  function computeCorridorId(missionId, picks) {
+    if (!picks) return missionId + '_unknown';
+    const how = picks.how || picks.like;
+    if (!how || !how.label) return missionId + '_unknown';
+    return missionId + '_' + how.label.toLowerCase().replace(/\s+/g, '_');
+  }
+
+  function saveQbit() {
+    const name = document.getElementById('qbitNameInput').value.trim();
+    const confirmBox = document.getElementById('saveConfirm');
+    if (!name) { confirmBox.className = 'result-box show result-warn'; confirmBox.style.display = 'block'; confirmBox.textContent = 'Give your Qbit a name first.'; return; }
+    if (window.VoicePicker && !window.VoicePicker.isComplete()) { confirmBox.className = 'result-box show result-warn'; confirmBox.style.display = 'block'; confirmBox.textContent = 'Pick all three to describe how they work before saving.'; return; }
+    const mechanism = window.VoicePicker ? window.VoicePicker.getMechanism() : '';
+    const corridorId = computeCorridorId(MISSION.id, window.VoicePicker ? window.VoicePicker.getPicks() : null);
+    const fxSliders = window.QbitFX ? window.QbitFX.getSliders() : null;
+    let recipe = {}, look = {}, emblem = {};
+    if (window.QbitRecipeMapper) {
+      recipe = window.QbitRecipeMapper.buildRecipeFromForge(MISSION.id, selectedParts, selectedFixes, selectedBoost, fxSliders, null);
+      look = window.QbitRecipeMapper.buildLookFromRecipe(recipe);
+      emblem = window.QbitRecipeMapper.buildEmblemFromBuild(MISSION.id, selectedParts, selectedFixes, selectedBoost);
+    }
+    const forgedQbit = { name, mission_id: MISSION.id, role: MISSION.roleTitle, parts: selectedParts, fixes: selectedFixes, boost: selectedBoost, fx: fxSliders, recipe, look, emblem, story: mechanism, mechanism, corridor_id: corridorId };
+    // Invent round trip (hackathon step 15): while a Continuum request is
+    // active, remember the new Qbit id for the NEW tag and offer the
+    // return trip instead of auto-redirecting.
+    const inventActive = !!(window.ContinuumRequest && window.ContinuumRequest.load());
+    if (window.ForgedQbitsStore) {
+      window.ForgedQbitsStore.add(forgedQbit)
+        .then(function (saved) {
+          if (inventActive && saved && saved.id !== undefined && saved.id !== null) {
+            try { sessionStorage.setItem('continuum.newQbitId', String(saved.id)); } catch (e) {}
+            if (window.ContinuumRequest) window.ContinuumRequest.showReturnButton();
+          }
+        })
+        .catch(err => console.warn('[Forge] Save failed:', err));
+    }
+    if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_qbit_saved', mission_id: MISSION.id, qbit_name: name, mechanism: mechanism, forge_elapsed_ms: Date.now() - _forgeEnteredAt, corridor_id: corridorId });
+    confirmBox.className = 'result-box show result-ok'; confirmBox.style.display = 'block';
+    confirmBox.textContent = 'Qbit forged as "' + name + '" — ' + mechanism + '. Chrona: "Good. Window closed on the tick."';
+    if (!inventActive) {
+      setTimeout(() => { window.location.href = '/continuum.html'; }, 2200);
+    }
+  }
+
+  function init() {
+    document.getElementById('centerMissionTitle').textContent = MISSION.title;
+    document.getElementById('centerMissionSub').textContent = MISSION.sub;
+    document.title = 'Quantum Forge — ' + MISSION.title;
+    const MISSION_PNGS = { harmonic_tuning: '/sprites/harmonic_fork_base_512.png', entanglement: '/sprites/entanglement.png', coherence_stitching: '/sprites/coherence_stitching.png', energy_absorption: '/sprites/energy_absorption.png', stealth_masking: '/sprites/stealth_masking.png' };
+    const _qImg = document.getElementById('qbitImg');
+    if (_qImg) _qImg.src = MISSION_PNGS[MISSION.id] || MISSION_PNGS.harmonic_tuning;
+    initBackground(); renderStepTracker(); renderBuildSummary(); renderParts(); renderFixes(); renderBoost();
+    updatePartsFooter(); updateFixesFooter(); updateBoostFooter(); updateQbitCenter(); updateInstallSlots();
+
+    document.getElementById('partsNext').addEventListener('click', () => { if (selectedParts.length === 3) goToStep(2); });
+    document.getElementById('fixesNext').addEventListener('click', () => { if (selectedFixes.length === 2) goToStep(3); });
+    document.getElementById('boostNext').addEventListener('click', () => { if (selectedBoost) goToStep(4); });
+    document.getElementById('fixesBack').addEventListener('click', () => goToStep(1));
+    document.getElementById('boostBack').addEventListener('click', () => goToStep(2));
+    document.getElementById('boostBackFromTest').addEventListener('click', () => goToStep(3));
+    document.getElementById('testBtn').addEventListener('click', runTest);
+    document.getElementById('testNext').addEventListener('click', () => { goToStep(5); renderQbitStage(); });
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      saveQbit();
+    });
+    initMachineChat(); renderRecaps();
+    if (window.MaigiclyAnalytics) window.MaigiclyAnalytics.track({ event_name: 'forge_entered', mission_id: MISSION.id, guardian: 'Chrona' });
+  }
+
+  /* ===== ASK THE MACHINE ===== */
+  (function() {
+    const ENDPOINT = '/api/forge-probe';
+    function getLastTestResult() { var el = document.getElementById('resultBox'); if (!el || !el.classList.contains('show')) return ''; return el.textContent.trim(); }
+    function getMachineContext() { return { mission_id: MISSION.id, mission_name: MISSION.title, selected_parts: selectedParts.map(id => { const p = ALL_PARTS.find(p => p.id === id); return p ? p.name : id; }), selected_fixes: selectedFixes, selected_boost: selectedBoost, test_result: getLastTestResult(), current_step: currentStep, guardian: 'Chrona' }; }
+    function updateContextStrip() {
+      const strip = document.getElementById('machineContextStrip');
+      if (!strip) return;
+      const parts = selectedParts.length ? selectedParts.map(id => ALL_PARTS.find(p => p.id === id).name).join(', ') : 'none';
+      strip.textContent = 'Mission: ' + MISSION.title + ' · Parts: ' + parts + ' · Fixes: ' + selectedFixes.join(', ') + ' · Boost: ' + (selectedBoost || 'none');
+    }
+    function addMessage(role, text) {
+      const box = document.getElementById('machineMessages'); if (!box) return;
+      const el = document.createElement('div'); el.className = 'machine-msg ' + role; el.textContent = text;
+      box.appendChild(el); box.scrollTop = box.scrollHeight;
+    }
+    function setThinking(on) {
+      const existing = document.getElementById('machineThinking');
+      if (on && !existing) { const el = document.createElement('div'); el.className = 'machine-msg thinking'; el.id = 'machineThinking'; el.textContent = 'Processing…'; document.getElementById('machineMessages').appendChild(el); document.getElementById('machineMessages').scrollTop = 9999; }
+      else if (!on && existing) { existing.remove(); }
+    }
+    async function askMachine(question) {
+      const ctx = getMachineContext();
+      const payload = { ...ctx, attempt_number: 0, validation_issue: null, player_question: question, prompt_type: 'machine_query' };
+      const resp = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!resp.ok) throw new Error('Machine offline: ' + resp.status);
+      const data = await resp.json();
+      return data.probe || data.reply || 'No response from the Machine.';
+    }
+    async function handleSend() {
+      const input = document.getElementById('machineInput'), sendBtn = document.getElementById('machineSendBtn');
+      const question = input.value.trim(); if (!question) return;
+      input.value = ''; sendBtn.disabled = true; addMessage('player', question); setThinking(true); updateContextStrip();
+      try { const answer = await askMachine(question); setThinking(false); addMessage('machine', answer); }
+      catch (e) { setThinking(false); addMessage('machine', 'The Machine is unreachable right now.'); console.warn('[Machine]', e.message); }
+      sendBtn.disabled = false; input.focus();
+    }
+    function openPanel() {
+      document.getElementById('machineChatPanel').classList.add('open'); updateContextStrip();
+      const msgs = document.getElementById('machineMessages');
+      if (msgs && msgs.children.length === 0) addMessage('machine', 'I can explain what any part, fix, or boost does, or tell you why a combination isn\'t working. What do you want to know?');
+      document.getElementById('machineInput').focus();
+    }
+    window.initMachineChat = function() {
+      document.getElementById('askMachineBtn').addEventListener('click', openPanel);
+      document.getElementById('machineCloseBtn').addEventListener('click', () => document.getElementById('machineChatPanel').classList.remove('open'));
+      document.getElementById('machineSendBtn').addEventListener('click', handleSend);
+      document.getElementById('machineInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSend(); });
+    };
+  })();
+
+  /* ===== AUDIO ENGINE ===== */
+  let audioCtx = null, _fundamental, _partial, _filterNode, _masterGain, _limiter;
+  let audioReady = false;
+
+  function initAudio() {
+    if (audioReady) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    _filterNode = audioCtx.createBiquadFilter(); _filterNode.type = 'lowpass'; _filterNode.frequency.value = 280;
+    _masterGain = audioCtx.createGain(); _masterGain.gain.value = 0;
+    _limiter = audioCtx.createDynamicsCompressor();
+    _limiter.threshold.value = -10; _limiter.knee.value = 6; _limiter.ratio.value = 8; _limiter.attack.value = 0.003; _limiter.release.value = 0.15;
+    _fundamental = audioCtx.createOscillator(); _fundamental.type = 'sine'; _fundamental.frequency.value = 196;
+    _partial = audioCtx.createOscillator(); _partial.type = 'square'; _partial.frequency.value = 392;
+    const partialGain = audioCtx.createGain(); partialGain.gain.value = 0;
+    _fundamental.connect(_filterNode); _partial.connect(partialGain); partialGain.connect(_filterNode);
+    _filterNode.connect(_masterGain); _masterGain.connect(_limiter); _limiter.connect(audioCtx.destination);
+    _fundamental.start(); _partial.start();
+    audioReady = true; audioCtx.__partialGain = partialGain;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function humScore() {
+    const sols = MISSION.solutions, sp = [...selectedParts].sort(), sf = [...selectedFixes].sort();
+    if (selectedParts.length < 3) return 0;
+    const partsOk = sols.some(s => JSON.stringify([...s.parts].sort()) === JSON.stringify(sp));
+    if (!partsOk) return 0;
+    if (selectedFixes.length < 2) return 1;
+    const fixesOk = sols.some(s => JSON.stringify([...s.parts].sort()) === JSON.stringify(sp) && JSON.stringify([...s.fixes].sort()) === JSON.stringify(sf));
+    if (!fixesOk) return 1;
+    if (!selectedBoost) return 2;
+    return sols.some(s => JSON.stringify([...s.parts].sort()) === JSON.stringify(sp) && JSON.stringify([...s.fixes].sort()) === JSON.stringify(sf) && s.boost === selectedBoost) ? 3 : 2;
+  }
+
+  function updateHum() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const score = humScore();
+    const gains = [0.03, 0.16, 0.34, 0.54], cutoffs = [200, 550, 1000, 1700], pGains = [0, 0.06, 0.20, 0.42];
+    const t = audioCtx.currentTime, ramp = 1.6;
+    _masterGain.gain.cancelScheduledValues(t); _masterGain.gain.setValueAtTime(_masterGain.gain.value || 0.001, t); _masterGain.gain.linearRampToValueAtTime(gains[score], t + ramp);
+    _filterNode.frequency.cancelScheduledValues(t); _filterNode.frequency.setValueAtTime(_filterNode.frequency.value || 200, t); _filterNode.frequency.linearRampToValueAtTime(cutoffs[score], t + ramp);
+    audioCtx.__partialGain.gain.cancelScheduledValues(t); audioCtx.__partialGain.gain.setValueAtTime(audioCtx.__partialGain.gain.value || 0, t); audioCtx.__partialGain.gain.linearRampToValueAtTime(pGains[score], t + ramp);
+  }
+
+  function playOnlineBurst() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    _masterGain.gain.cancelScheduledValues(t);
+    _masterGain.gain.setValueAtTime(0.001, t);
+    _masterGain.gain.linearRampToValueAtTime(0.65, t + 0.4);
+    _masterGain.gain.setValueAtTime(0.65, t + 2.0);
+    _masterGain.gain.exponentialRampToValueAtTime(0.001, t + 3.2);
+    _filterNode.frequency.setValueAtTime(2400, t);
+    audioCtx.__partialGain.gain.setValueAtTime(0.5, t);
+    audioCtx.__partialGain.gain.setValueAtTime(0, t + 3.2);
+    const pulse = audioCtx.createGain(); pulse.gain.value = 0;
+    const osc = audioCtx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 440;
+    osc.connect(pulse); pulse.connect(_limiter); osc.start(t);
+    pulse.gain.linearRampToValueAtTime(0.3, t + 0.08);
+    pulse.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    osc.stop(t + 1.0);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const tmPanel = document.getElementById('timingMonitor');
+    if (tmPanel) {
+      tmPanel.style.cursor = 'pointer';
+      tmPanel.title = 'Tap to hear current signal state';
+      tmPanel.addEventListener('click', function() {
+        const selCount = selectedParts.length + selectedFixes.length + (selectedBoost ? 1 : 0);
+        if (selCount >= 6) { playOnlineBurst(); }
+      });
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+<script>
+(function() {
+  const el = document.getElementById('partsInstruction');
+  if (!el) return;
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  el.textContent = isTouch
+    ? 'Tap and place the correct mod on its part.'
+    : 'Tap and drag the correct mod on its part.';
+})();
+</script>
+</body>
+</html>

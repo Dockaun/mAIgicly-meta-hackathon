@@ -1,0 +1,332 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Choose Your Forge Guardian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --refrax: #6fe0ff;
+    --magnetica: #ff8a8a;
+    --chrona: #f0c14d;
+    --violet: #c9a6ff;
+  }
+  body {
+    background: radial-gradient(120% 90% at 50% -10%, #0d1f30 0%, #050a12 55%, #03060a 100%);
+    color: #f5fbff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle { position: absolute; width: 1.5px; height: 1.5px; border-radius: 50%; opacity: 0; animation: drift linear infinite; }
+  @keyframes drift {
+    0% { opacity: 0; transform: translateY(100vh) scale(0); }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.2; }
+    100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+  }
+
+  .hero {
+    text-align: center;
+    padding: 72px 24px 40px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(150,200,230,0.5);
+    margin-bottom: 14px;
+  }
+  .hero-title {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: rgba(220,242,255,0.65);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 22px;
+    max-width: 1040px;
+    margin: 40px auto 0;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .g-card {
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .g-card:hover { transform: translateY(-4px); }
+
+  .card-video-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #0a0a18;
+    overflow: hidden;
+  }
+  .card-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-body {
+    background: rgba(8,12,24,0.95);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-status-bar { display: flex; align-items: center; gap: 6px; }
+  .status-pip {
+    width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+    animation: pip-pulse 2s infinite;
+  }
+  @keyframes pip-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .status-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+  }
+
+  .card-name { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.1; }
+  .card-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.54rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.08em;
+  }
+  .card-flavor {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.65);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .forge-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 4px;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .forge-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* accent colors */
+  .g-refrax   { border-color: rgba(111,224,255,0.25); box-shadow: 0 0 22px rgba(111,224,255,0.08); }
+  .g-magnetica { border-color: rgba(255,138,138,0.25); box-shadow: 0 0 22px rgba(255,138,138,0.10); }
+  .g-chrona   { border-color: rgba(240,193,77,0.25);  box-shadow: 0 0 22px rgba(240,193,77,0.08); }
+  .g-violet   { border-color: rgba(201,166,255,0.25); box-shadow: 0 0 22px rgba(201,166,255,0.08); }
+
+  .g-refrax:hover   { box-shadow: 0 8px 32px rgba(111,224,255,0.18); }
+  .g-magnetica:hover { box-shadow: 0 8px 32px rgba(255,138,138,0.20); }
+  .g-chrona:hover   { box-shadow: 0 8px 32px rgba(240,193,77,0.18); }
+  .g-violet:hover   { box-shadow: 0 8px 32px rgba(201,166,255,0.18); }
+
+  .c-refrax   { color: var(--refrax); }
+  .c-magnetica { color: var(--magnetica); }
+  .c-chrona   { color: var(--chrona); }
+  .c-violet   { color: var(--violet); }
+
+  .pip-refrax   { background: var(--refrax); }
+  .pip-magnetica { background: var(--magnetica); }
+  .pip-chrona   { background: var(--chrona); }
+  .pip-violet   { background: var(--violet); }
+
+  .btn-refrax   { background: var(--refrax); color: #020818; }
+  .btn-magnetica { background: var(--magnetica); color: #140004; }
+  .btn-chrona   { background: var(--chrona); color: #140f00; }
+  .btn-violet   { background: var(--violet); color: #06020e; }
+
+  .footnote {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(150,200,230,0.28);
+    letter-spacing: 0.08em;
+    padding-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; padding: 0 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Forge Unlocked</div>
+  <h1 class="hero-title">Choose Your Forge Guardian</h1>
+  <p class="hero-sub">Pick the Guardian who will guide your repairs. You can switch between them anytime.</p>
+</div>
+
+<div class="grid">
+
+  <!-- REFRAX -->
+  <div class="g-card g-refrax">
+    <div class="card-video-wrap">
+      <video class="card-video" src="/assets/select_refrax.mp4" autoplay muted loop playsinline></video>
+    </div>
+    <div class="card-body">
+      <div class="card-status-bar">
+        <span class="status-pip pip-refrax"></span>
+        <span class="status-text c-refrax">SIGNAL SCATTERED</span>
+      </div>
+      <div class="card-name c-refrax">Refrax</div>
+      <div class="card-subtitle">Silicon &amp; Boron &nbsp;·&nbsp; The Light Weaver</div>
+      <div class="card-flavor">The pathways are dark. So I grabbed the first sleeve I could find. That was yours.</div>
+      <button class="forge-btn btn-refrax" onclick="selectGuardian('refrax')">FORGE WITH REFRAX</button>
+    </div>
+  </div>
+
+  <!-- MAGNETICA -->
+  <div class="g-card g-magnetica">
+    <div class="card-video-wrap">
+      <video class="card-video" src="/assets/select_magnetica.mp4" autoplay muted loop playsinline></video>
+    </div>
+    <div class="card-body">
+      <div class="card-status-bar">
+        <span class="status-pip pip-magnetica"></span>
+        <span class="status-text c-magnetica">FIELD DRIFTING</span>
+      </div>
+      <div class="card-name c-magnetica">Magnetica</div>
+      <div class="card-subtitle">Nickel &amp; Cobalt &nbsp;·&nbsp; The Field Shaper</div>
+      <div class="card-flavor">I'm positively charming. Negatively clingy. I push. I pull. Balance me.</div>
+      <button class="forge-btn btn-magnetica" onclick="selectGuardian('magnetica')">FORGE WITH MAGNETICA</button>
+    </div>
+  </div>
+
+  <!-- CHRONA -->
+  <div class="g-card g-chrona">
+    <div class="card-video-wrap">
+      <video class="card-video" src="/assets/select_chrona.mp4" autoplay muted loop playsinline></video>
+    </div>
+    <div class="card-body">
+      <div class="card-status-bar">
+        <span class="status-pip pip-chrona"></span>
+        <span class="status-text c-chrona">TIMING OFFLINE</span>
+      </div>
+      <div class="card-name c-chrona">Chrona</div>
+      <div class="card-subtitle">Rubidium &amp; Cesium &nbsp;·&nbsp; The Time Keeper</div>
+      <div class="card-flavor">I'm the 808. Everything runs on my beat. It's slipping. You feel that?</div>
+      <button class="forge-btn btn-chrona" onclick="selectGuardian('chrona')">FORGE WITH CHRONA</button>
+    </div>
+  </div>
+
+  <!-- VIOLET FLICKER -->
+  <div class="g-card g-violet">
+    <div class="card-video-wrap">
+      <video class="card-video" src="/assets/select_violet_flicker.mp4" autoplay muted loop playsinline></video>
+    </div>
+    <div class="card-body">
+      <div class="card-status-bar">
+        <span class="status-pip pip-violet"></span>
+        <span class="status-text c-violet">PLASMA DARK</span>
+      </div>
+      <div class="card-name c-violet">Violet Flicker</div>
+      <div class="card-subtitle">Krypton &amp; Xenon &nbsp;·&nbsp; The Signal Hunter</div>
+      <div class="card-flavor">I start everything. PHHRRRTTT. If you smelt it, you dealt it.</div>
+      <button class="forge-btn btn-violet" onclick="selectGuardian('violet_flicker')">FORGE WITH VIOLET FLICKER</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="footnote">You can return here anytime to switch guardians.</div>
+
+<script>
+  (function() {
+    const container = document.getElementById('particles');
+    const colors = ['#6fe0ff','#ff8a8a','#f0c14d','#c9a6ff'];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDelay = Math.random() * 12 + 's';
+      p.style.animationDuration = (10 + Math.random() * 8) + 's';
+      container.appendChild(p);
+    }
+  })();
+
+  function guardianForgePage(id) {
+    if (id === 'refrax') return '/forge.html';
+    if (id === 'magnetica') return '/forge-magnetica.html';
+    if (id === 'violet_flicker') return '/forge-violetflicker.html';
+    if (id === 'chrona') return '/forge-chrona.html';
+    return null;
+  }
+
+  function selectGuardian(id) {
+    localStorage.setItem('forge.activeGuardian', id);
+    const missionParam = new URLSearchParams(location.search).get('mission');
+    const missionSuffix = missionParam ? '?mission=' + encodeURIComponent(missionParam) : '';
+    console.log('[Guardian Select] Selected guardian:', id, '| mission:', missionParam || '(none)');
+    const page = guardianForgePage(id);
+    if (page) {
+      window.location.href = page + missionSuffix;
+    } else {
+      console.warn('[Guardian Select] Unknown guardian ID:', id, '— cannot route. Returning to Resonance.');
+      window.location.href = '/resonance.html';
+    }
+  }
+
+  // Invent round trip (hackathon step 19f): the Resonance request card picks
+  // the mission and guardian behind the scenes and passes them as URL
+  // parameters. Route straight through (replace, so Back skips this stop);
+  // without both params the player chooses as before.
+  document.addEventListener('DOMContentLoaded', function () {
+    const params = new URLSearchParams(location.search);
+    const guardian = params.get('guardian');
+    const mission = params.get('mission');
+    const validMissions = ['harmonic_tuning', 'entanglement', 'coherence_stitching', 'energy_absorption', 'stealth_masking'];
+    const page = guardianForgePage(guardian);
+    if (page && mission && validMissions.indexOf(mission) !== -1) {
+      try { localStorage.setItem('forge.activeGuardian', guardian); } catch (e) {}
+      console.log('[Guardian Select] Invent auto-route:', guardian, '| mission:', mission);
+      window.location.replace(page + '?mission=' + encodeURIComponent(mission));
+    }
+  });
+</script>
+
+</body>
+</html>

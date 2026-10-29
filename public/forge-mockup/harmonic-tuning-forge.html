@@ -1,0 +1,974 @@
+<!-- © 2026 mAIgicly. Mockup for review — Harmonic Tuning Forge mission, 5-step sequential flow -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quantum Forge — Harmonic Tuning</title>
+<style>
+  :root {
+    --bg: #061018;
+    --panel: rgba(25,55,80,0.5);
+    --panel-border: rgba(140,210,255,0.3);
+    --ink: #f5fbff;
+    --muted: rgba(220,242,255,0.65);
+    --muted2: rgba(200,230,250,0.5);
+    --glow: #6fe0ff;
+    --refrax: #9fe8ff;
+    --ok: #34d399;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  /* ===== MORPH / SETTLE BACKGROUND ===== */
+  #bgStage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: #030608;
+    overflow: hidden;
+  }
+  #morphVideo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+  #settledImage {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: auto;
+    max-width: 60%;
+    object-fit: cover;
+    object-position: right top;
+  }
+  #morphVideo { z-index: 2; opacity: 1; transition: opacity 0.9s ease; }
+  #settledImage { z-index: 1; opacity: 0; transition: opacity 1.2s ease; filter: brightness(0.9) saturate(1.35) contrast(1.05); }
+  #bgScrim {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: linear-gradient(115deg, rgba(6,16,28,0.58) 0%, rgba(6,16,28,0.42) 38%, rgba(6,16,28,0.22) 70%, rgba(6,16,28,0.4) 100%);
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+
+  /* ===== APP SHELL ===== */
+  #app {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    min-height: 100vh;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  /* ===== LEFT COLUMN ===== */
+  .left-col {
+    width: 300px;
+    flex-shrink: 0;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .companion-box {
+    background: linear-gradient(140deg, rgba(140,210,245,0.22), rgba(80,135,180,0.15));
+    backdrop-filter: blur(8px);
+    border-radius: 20px 20px 20px 4px;
+    border: 1px solid rgba(180,235,255,0.6);
+    padding: 16px 18px;
+    box-shadow: inset 0 1px 16px rgba(220,248,255,0.2), 0 0 28px rgba(110,220,255,0.15), 0 4px 24px rgba(0,0,0,0.25);
+    position: relative;
+  }
+  .companion-box::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 12%;
+    width: 55%;
+    height: 24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
+    border-radius: 50%;
+    filter: blur(3px);
+    pointer-events: none;
+  }
+  .companion-name { font-size: 11px; color: var(--refrax); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 6px; position: relative; }
+  .companion-line { font-size: 13px; color: rgba(255,255,255,0.92); line-height: 1.55; transition: opacity 0.2s ease; position: relative; }
+
+  .panel {
+    background: linear-gradient(135deg, rgba(130,205,240,0.13), rgba(70,130,170,0.1));
+    backdrop-filter: blur(6px);
+    border-radius: 18px;
+    border: 1px solid rgba(160,225,255,0.4);
+    padding: 14px;
+    box-shadow: inset 0 1px 12px rgba(210,245,255,0.12), 0 0 16px rgba(90,200,255,0.06);
+  }
+  .panel-label {
+    font-size: 11px;
+    color: rgba(220,245,255,0.65);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .step-row {
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(200,220,235,0.32);
+  }
+  .step-row .num { font-size: 11px; opacity: 0.7; width: 14px; }
+  .step-row.active { background: rgba(140,200,255,0.15); color: var(--refrax); font-weight: 600; }
+  .step-row.done { color: rgba(150,230,200,0.85); }
+  .step-row .lock-icon { margin-left: auto; opacity: 0.5; }
+  .step-row .check-icon { margin-left: auto; color: var(--ok); }
+
+  .build-summary-line {
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.7;
+  }
+  .build-summary-line .filled { color: rgba(220,240,255,0.85); }
+
+  .machine-box {
+    background: linear-gradient(135deg, rgba(140,205,225,0.16), rgba(35,70,90,0.18));
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(170,215,235,0.3);
+    padding: 13px 14px;
+  }
+  .machine-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .machine-title { font-size: 11px; color: rgba(200,220,235,0.55); letter-spacing: 0.05em; }
+  .machine-status { font-size: 10px; color: rgba(180,210,230,0.32); margin-left: auto; }
+  .machine-btn {
+    width: 100%;
+    background: rgba(140,180,210,0.08);
+    border: 1px solid rgba(140,180,210,0.22);
+    color: rgba(220,235,245,0.72);
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+  }
+  .machine-btn:hover { background: rgba(140,180,210,0.14); }
+
+  /* ===== MAIN COLUMN ===== */
+  .main-col {
+    flex: 1;
+    padding: 36px 40px 80px;
+    min-width: 0;
+  }
+  .main-inner { max-width: 580px; }
+
+  .mission-title { font-size: 21px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
+  .mission-sub { font-size: 14px; color: var(--muted); margin-bottom: 26px; }
+
+  .step-label {
+    font-size: 12px;
+    color: rgba(200,235,255,0.5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .step-sub { font-size: 12px; color: var(--muted2); margin-bottom: 16px; }
+
+  .group-label {
+    font-size: 10px;
+    color: rgba(200,235,255,0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  .group-label:first-child { margin-top: 0; }
+
+  .choice-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .choice-card {
+    cursor: pointer;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(160,225,255,0.3);
+    background: linear-gradient(135deg, rgba(120,195,235,0.11), rgba(65,125,165,0.09));
+    backdrop-filter: blur(5px);
+    box-shadow: inset 0 1px 8px rgba(210,245,255,0.08);
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    flex: 1;
+    min-width: 220px;
+  }
+  .choice-card:hover { border-color: rgba(160,220,250,0.55); background: linear-gradient(135deg, rgba(120,195,235,0.17), rgba(65,125,165,0.13)); }
+  .choice-card.selected {
+    border-color: rgba(200,242,255,0.8);
+    background: linear-gradient(135deg, rgba(185,240,255,0.22), rgba(70,145,190,0.15));
+    box-shadow: inset 0 1px 14px rgba(220,248,255,0.22), 0 0 18px rgba(110,220,255,0.14);
+  }
+  .choice-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid rgba(150,205,235,0.55);
+    flex-shrink: 0; margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #042c53;
+  }
+  .choice-card.selected .choice-check {
+    border-color: #d9f3ff;
+    background: linear-gradient(135deg, #d9f3ff, #57d3ff);
+  }
+  .choice-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .choice-desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+  .step-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24px;
+  }
+  .count-label { font-size: 13px; color: var(--muted); }
+  .next-btn {
+    background: linear-gradient(135deg, #9fe3ff, #57d3ff);
+    color: #042c53;
+    border: none;
+    padding: 11px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    font-family: inherit;
+  }
+  .next-btn.enabled { opacity: 1; pointer-events: auto; }
+  .next-btn:hover.enabled { filter: brightness(1.08); }
+
+  /* completed step recap, shown above the active step */
+  .recap {
+    background: linear-gradient(135deg, rgba(120,195,235,0.16), rgba(65,125,165,0.14));
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(160,225,255,0.28);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .recap .ok-dot { color: var(--ok); }
+  .recap b { color: rgba(220,240,255,0.85); font-weight: 600; }
+
+  /* test result */
+  .result-box {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    display: none;
+  }
+  .result-box.show { display: block; }
+  .result-ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: #9ef3c6; }
+  .result-warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #ffd166; }
+
+  /* qbit visual stage */
+  .qbit-stage {
+    background: linear-gradient(135deg, rgba(120,195,235,0.1), rgba(65,125,165,0.08));
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(150,220,255,0.22);
+    border-radius: 18px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .qbit-avatar {
+    width: 100%;
+    max-width: 280px;
+    height: 200px;
+    border-radius: 16px;
+    background: radial-gradient(120% 120% at 50% 0%, #0f1d3a 0%, #060c18 70%);
+    border: 1px solid rgba(150,220,255,0.25);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qbit-avatar canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .qbit-build-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .qbit-tag {
+    font-size: 11.5px;
+    font-family: ui-monospace, monospace;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px dashed rgba(150,220,255,0.35);
+    color: rgba(220,240,255,0.75);
+    background: rgba(15,25,35,0.4);
+  }
+  .qbit-tag.boost-tag { border-color: rgba(190,150,255,0.45); color: rgba(220,200,255,0.85); }
+  .qbit-build-note {
+    font-size: 12px;
+    color: var(--muted2);
+    text-align: center;
+    line-height: 1.5;
+    max-width: 380px;
+  }
+
+  /* voice picker — real VoicePicker module from forge.html */
+  .voice-picker-section { margin-top: 4px; }
+  .voice-picker-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 4px;
+  }
+  .voice-chip {
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(150,220,255,0.25);
+    background: linear-gradient(135deg, rgba(120,195,235,0.08), rgba(65,125,165,0.07));
+    color: rgba(220,240,255,0.75);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .voice-chip:hover { border-color: rgba(170,225,250,0.45); }
+  .voice-chip.selected {
+    border-color: rgba(110,224,255,0.65);
+    background: linear-gradient(135deg, rgba(120,195,235,0.28), rgba(65,125,165,0.2));
+    color: #eafaff;
+  }
+  #mechanismPreview {
+    margin-top: 10px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: rgba(10,16,24,0.5);
+    border: 1px dashed rgba(150,220,255,0.3);
+    border-radius: 12px;
+    font-family: ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--muted2);
+    min-height: 18px;
+    transition: all 0.2s ease;
+  }
+
+  /* naming step */
+  .name-input {
+    width: 100%;
+    background: rgba(15,25,35,0.5);
+    border: 1px solid rgba(140,200,255,0.25);
+    color: var(--ink);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    margin-bottom: 8px;
+  }
+  .name-input:focus { outline: none; border-color: var(--glow); }
+  .name-input::placeholder { color: rgba(220,240,255,0.3); }
+
+  .save-btn {
+    background: var(--glow);
+    color: #042c53;
+    border: none;
+    padding: 12px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-top: 12px;
+    font-family: inherit;
+  }
+
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+  }
+
+  @media (max-width: 860px) {
+    #app { flex-direction: column; }
+    .left-col { width: 100%; position: relative; height: auto; flex-direction: row; flex-wrap: wrap; }
+    .main-col { padding: 24px 18px 60px; }
+  }
+</style>
+<script>
+  // Mission config QbitFX reads to namespace its saved overlay settings
+  window.CONFIG = { missionId: 'harmonic_tuning' };
+</script>
+<script src="js/qbit-fx.js"></script>
+<script src="js/voice-picker.js"></script>
+</head>
+<body>
+
+<h1 class="sr-only">Quantum Forge — Harmonic Tuning mission, step by step build with Refrax as active companion</h1>
+
+<div id="bgStage">
+  <video id="morphVideo" autoplay muted playsinline></video>
+  <img id="settledImage" src="" alt="" />
+  <div id="bgScrim"></div>
+</div>
+
+<div id="app">
+
+  <div class="left-col">
+
+    <div class="companion-box">
+      <div class="companion-name">Refrax</div>
+      <div class="companion-line" id="refraxLine">The signal's splitting apart, Apprentice. Six parts can help, but only three belong together.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Steps</div>
+      <div id="stepTracker"></div>
+    </div>
+
+    <div class="panel" id="buildSummaryPanel">
+      <div class="panel-label">Your build</div>
+      <div class="build-summary-line" id="buildSummaryLine">Nothing chosen yet</div>
+    </div>
+
+    <div class="machine-box">
+      <div class="machine-header">
+        <span class="machine-title">The Machine</span>
+        <span class="machine-status">partially online</span>
+      </div>
+      <button class="machine-btn" type="button" onclick="alert('Ask the Machine panel would open here.')">Ask the Machine</button>
+    </div>
+
+  </div>
+
+  <div class="main-col">
+    <div class="main-inner">
+
+      <div class="mission-title">Harmonic tuning</div>
+      <div class="mission-sub">make vibrations sing as one</div>
+
+      <!-- ===================== STEP 1: PARTS ===================== -->
+      <div class="step-panel active" data-step="1">
+        <div class="step-label">Choose 3 of 6 parts</div>
+        <div class="step-sub">Refrax: we need three that actually work together.</div>
+        <div id="partsGroups"></div>
+        <div class="step-footer">
+          <span class="count-label" id="partsCount">0 of 3 selected</span>
+          <button class="next-btn" id="partsNext">Next: choose fixes</button>
+        </div>
+      </div>
+
+      <!-- ===================== STEP 2: FIXES ===================== -->
+      <div class="step-panel" data-step="2">
+        <div class="recap" id="recapParts"></div>
+        <div class="step-label">Add 2 quantum fixes</div>
+        <div class="step-sub">Each fix stabilizes the build a different way.</div>
+        <div class="choice-row" id="fixesRow"></div>
+        <div class="step-footer">
+          <span class="count-label" id="fixesCount">0 of 2 selected</span>
+          <button class="next-btn" id="fixesNext">Next: choose boost</button>
+        </div>
+      </div>
+
+      <!-- ===================== STEP 3: BOOST ===================== -->
+      <div class="step-panel" data-step="3">
+        <div class="recap" id="recapParts2"></div>
+        <div class="recap" id="recapFixes"></div>
+        <div class="step-label">Add 1 power boost</div>
+        <div class="step-sub">Optional enhancers, not taught in the chambers, reason it out.</div>
+        <div class="choice-row" id="boostRow"></div>
+        <div class="step-footer">
+          <span class="count-label" id="boostCount">0 of 1 selected</span>
+          <button class="next-btn" id="boostNext">Next: test the fix</button>
+        </div>
+      </div>
+
+      <!-- ===================== STEP 4: TEST ===================== -->
+      <div class="step-panel" data-step="4">
+        <div class="recap" id="recapParts3"></div>
+        <div class="recap" id="recapFixes2"></div>
+        <div class="recap" id="recapBoost"></div>
+        <div class="step-label">Test the fix</div>
+        <div class="step-sub">Run the build and see if it holds.</div>
+        <button class="next-btn enabled" id="testBtn" style="margin-top: 8px;">Test the fix</button>
+        <div class="result-box" id="resultBox"></div>
+        <div class="step-footer" id="testFooter" style="display: none;">
+          <span></span>
+          <button class="next-btn enabled" id="testNext">Next: name your Qbit</button>
+        </div>
+      </div>
+
+      <!-- ===================== STEP 5: NAME ===================== -->
+      <div class="step-panel" data-step="5">
+        <div class="step-label">Your Qbit is forged</div>
+        <div class="step-sub">This Qbit formed from your repair. Name it.</div>
+
+        <div class="qbit-stage">
+          <div class="qbit-avatar" id="qbitAvatar">
+            <canvas id="qbitCanvas" width="512" height="512"></canvas>
+          </div>
+          <div class="qbit-build-tags" id="qbitBuildTags"></div>
+          <div class="qbit-build-note">The beam, scanline, glow, and shimmer above are drawn from what you actually built, not decoration.</div>
+        </div>
+
+        <div class="group-label" style="margin-top: 22px;">Name it</div>
+        <input class="name-input" id="qbitNameInput" placeholder="Name your quantum creation..." maxlength="30" />
+
+        <div class="voice-picker-section">
+          <div class="group-label" style="margin-top: 18px;">How does it work?</div>
+          <div id="voicePicker_how" class="voice-picker-group"></div>
+
+          <div class="group-label">When does it fail?</div>
+          <div id="voicePicker_fails" class="voice-picker-group"></div>
+
+          <div class="group-label">What is it like?</div>
+          <div id="voicePicker_like" class="voice-picker-group"></div>
+
+          <div id="mechanismPreview">Select all three to describe your mechanism...</div>
+          <textarea id="qbitStory" style="display:none"></textarea>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Qbit</button>
+        <div class="result-box show result-ok" id="saveConfirm" style="display: none;"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ===================== REAL MISSION DATA — Harmonic Tuning ===================== */
+  const MISSION = {
+    title: 'Harmonic tuning',
+    sub: 'make vibrations sing as one',
+    correctParts: ['shimmer_splitter', 'phase_prism', 'readout'],
+    correctFixes: ['F::', 'C//'],
+    correctBoost: 'PH~'
+  };
+
+  const PART_GROUPS = [
+    {
+      label: 'Split / open signal',
+      parts: [
+        { id: 'shimmer_splitter', name: 'Shimmer Splitter', desc: 'Splits one signal into multiple paths so timing differences can be compared.',
+          line: "Splitter's in. Borrowed, with intent to return, obviously." },
+        { id: 'field_mirror', name: 'Field Mirror', desc: 'Reflects unstable signals back through the system for another synchronization pass.',
+          line: "Mirror, huh. That one's more Magnetica's style, but let's see where it goes." }
+      ]
+    },
+    {
+      label: 'Modulate / phase / time',
+      parts: [
+        { id: 'phase_prism', name: 'Phase Prism', desc: 'Adjusts signal timing so overlapping waves arrive together.',
+          line: "Phase prism, nice. Bendy light, my favorite kind of light." },
+        { id: 'coil_phase', name: 'Coil Phase', desc: 'Creates repeating magnetic timing pulses to stabilize oscillation cycles.',
+          line: "Coil phase does timing too, but it's thinking in magnets, not waves." }
+      ]
+    },
+    {
+      label: 'Lock / read result',
+      parts: [
+        { id: 'readout', name: 'Readout', desc: 'Measures and locks the strongest stable output.',
+          line: "Readout's in. Now we just need this thing to stop sounding like a kazoo orchestra." },
+        { id: 'hall_sensor', name: 'Hall Sensor', desc: 'Detects hidden changes in magnetic field behavior during synchronization.',
+          line: "Hall sensor reads magnetic fields, not light. Different sense entirely." }
+      ]
+    }
+  ];
+  const ALL_PARTS = PART_GROUPS.flatMap(g => g.parts);
+
+  const FIXES = [
+    { id: 'SH', name: 'SH', sub: 'Superpose', desc: 'Keeps multiple signal possibilities open during testing.',
+      line: "SH holds the door open. Every path stays alive a little longer." },
+    { id: 'F::', name: 'F::', sub: 'FringeGate', desc: 'Shifts signal timing to improve synchronization.',
+      line: "F::, good call, that's the one that nudges everyone onto the same beat." },
+    { id: 'C//', name: 'C//', sub: 'Collapse', desc: 'Locks the system onto one stable result.',
+      line: "C//, locking it down. No more guessing after this." }
+  ];
+
+  const BOOSTS = [
+    { id: 'PH~', name: 'PH~', sub: 'PhaseLock', desc: 'Amplifies timing resonance between synchronized signals.',
+      line: "PH~. Oh, that's the good stuff. Watch this." },
+    { id: 'EN≡', name: 'EN≡', sub: 'Entangle', desc: 'Links channels so they act together.',
+      line: "EN≡ links things up, but that's not really what's scattering here." },
+    { id: 'N0', name: 'N0', sub: 'Null', desc: 'Drains excess energy, goes quiet.',
+      line: "N0 calms things down, could work, but it's not the loudest choice." },
+    { id: 'G0', name: 'G0', sub: 'Ghost', desc: 'Slips the signal through barriers unseen.',
+      line: "G0's for hiding. We're not hiding anything here, we're fixing it." }
+  ];
+
+  const STEPS = ['Parts', 'Fixes', 'Boost', 'Test the fix', 'Name Qbit'];
+
+  /* ===================== STATE ===================== */
+  let currentStep = 1;
+  let selectedParts = [];
+  let selectedFixes = [];
+  let selectedBoost = null;
+  let tested = false;
+
+  /* ===================== BACKGROUND MORPH SEQUENCE ===================== */
+  function initBackground() {
+    const video = document.getElementById('morphVideo');
+    const stillImg = document.getElementById('settledImage');
+
+    video.src = '/assets/refrax-morph.mp4';
+    stillImg.src = '/assets/refrax-morph-still.png';
+
+    function settle() {
+      document.getElementById('morphVideo').style.opacity = '0';
+      document.getElementById('settledImage').style.opacity = '1';
+      document.getElementById('bgScrim').style.opacity = '1';
+      document.getElementById('app').style.opacity = '1';
+    }
+
+    video.addEventListener('ended', settle);
+    video.addEventListener('error', settle);
+    // Fallback in case video fails to load or autoplay is blocked
+    setTimeout(settle, 3500);
+  }
+
+  /* ===================== STEP TRACKER ===================== */
+  function renderStepTracker() {
+    const wrap = document.getElementById('stepTracker');
+    wrap.innerHTML = STEPS.map((s, i) => {
+      const n = i + 1;
+      let cls = 'step-row';
+      let icon = '';
+      if (n < currentStep) { cls += ' done'; icon = '<span class="check-icon">&#10003;</span>'; }
+      else if (n === currentStep) { cls += ' active'; }
+      else { icon = '<span class="lock-icon">&#128274;</span>'; }
+      return '<div class="' + cls + '"><span class="num">' + n + '</span>' + s + icon + '</div>';
+    }).join('');
+  }
+
+  function goToStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.step-panel').forEach(p => {
+      p.classList.toggle('active', Number(p.dataset.step) === n);
+    });
+    renderStepTracker();
+    renderRecaps();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderRecaps() {
+    const partNames = selectedParts.map(id => ALL_PARTS.find(p => p.id === id).name).join(', ');
+    const fixNames = selectedFixes.join(' + ');
+    const boostName = selectedBoost || '';
+
+    const partsRecapHtml = '<span class="ok-dot">&#10003;</span> Parts: <b>' + partNames + '</b>';
+    const fixesRecapHtml = '<span class="ok-dot">&#10003;</span> Fixes: <b>' + fixNames + '</b>';
+    const boostRecapHtml = '<span class="ok-dot">&#10003;</span> Boost: <b>' + boostName + '</b>';
+
+    const r1 = document.getElementById('recapParts'); if (r1) r1.innerHTML = partsRecapHtml;
+    const r2 = document.getElementById('recapParts2'); if (r2) r2.innerHTML = partsRecapHtml;
+    const r3 = document.getElementById('recapParts3'); if (r3) r3.innerHTML = partsRecapHtml;
+    const r4 = document.getElementById('recapFixes'); if (r4) r4.innerHTML = fixesRecapHtml;
+    const r5 = document.getElementById('recapFixes2'); if (r5) r5.innerHTML = fixesRecapHtml;
+    const r6 = document.getElementById('recapBoost'); if (r6) r6.innerHTML = boostRecapHtml;
+  }
+
+  function renderBuildSummary() {
+    const box = document.getElementById('buildSummaryLine');
+    if (selectedParts.length === 0) {
+      box.innerHTML = 'Waiting for first part&hellip;';
+      return;
+    }
+    const parts = '<span class="filled">&#10003; ' + selectedParts.map(id => ALL_PARTS.find(p => p.id === id).name).join('<br>&#10003; ') + '</span>';
+    let html = 'Parts:<br>' + parts;
+    if (selectedFixes.length > 0) {
+      html += '<br><br>Fixes:<br><span class="filled">&#10003; ' + selectedFixes.join('<br>&#10003; ') + '</span>';
+    }
+    if (selectedBoost) {
+      html += '<br><br>Boost:<br><span class="filled">&#10003; ' + selectedBoost + '</span>';
+    }
+    box.innerHTML = html;
+  }
+
+  function setRefraxLine(text) {
+    const el = document.getElementById('refraxLine');
+    el.style.opacity = '0';
+    setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 180);
+  }
+
+  /* ===================== STEP 1: PARTS ===================== */
+  function renderParts() {
+    const wrap = document.getElementById('partsGroups');
+    wrap.innerHTML = PART_GROUPS.map(g => {
+      const cards = g.parts.map(p => {
+        const isSel = selectedParts.includes(p.id);
+        return '<div class="choice-card' + (isSel ? ' selected' : '') + '" data-id="' + p.id + '" data-kind="part">' +
+          '<div class="choice-check">' + (isSel ? '&#10003;' : '') + '</div>' +
+          '<div><div class="choice-name">' + p.name + '</div><div class="choice-desc">' + p.desc + '</div></div>' +
+          '</div>';
+      }).join('');
+      return '<div class="group-label">' + g.label + '</div><div class="choice-row">' + cards + '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        const part = ALL_PARTS.find(p => p.id === id);
+        const idx = selectedParts.indexOf(id);
+        if (idx === -1) {
+          if (selectedParts.length < 3) {
+            selectedParts.push(id);
+            setRefraxLine(part.line);
+          }
+        } else {
+          selectedParts.splice(idx, 1);
+          setRefraxLine("Fine, fine, putting it back. I wasn't attached. Mostly.");
+        }
+        renderParts();
+        renderBuildSummary();
+        updatePartsFooter();
+        if (selectedParts.length === 3) {
+          const correct = MISSION.correctParts.every(id => selectedParts.includes(id));
+          setTimeout(() => setRefraxLine(correct
+            ? "Three parts, one from each group. Now that's a build I can work with."
+            : "Hm. That combination's pulling in different directions. Might be worth a rethink."), 450);
+        }
+      });
+    });
+  }
+
+  function updatePartsFooter() {
+    document.getElementById('partsCount').textContent = selectedParts.length + ' of 3 selected';
+    document.getElementById('partsNext').classList.toggle('enabled', selectedParts.length === 3);
+  }
+
+  /* ===================== STEP 2: FIXES ===================== */
+  function renderFixes() {
+    const wrap = document.getElementById('fixesRow');
+    wrap.innerHTML = FIXES.map(f => {
+      const isSel = selectedFixes.includes(f.id);
+      return '<div class="choice-card' + (isSel ? ' selected' : '') + '" data-id="' + f.id + '" data-kind="fix">' +
+        '<div class="choice-check">' + (isSel ? '&#10003;' : '') + '</div>' +
+        '<div><div class="choice-name">' + f.name + ' &mdash; ' + f.sub + '</div><div class="choice-desc">' + f.desc + '</div></div>' +
+        '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        const fix = FIXES.find(f => f.id === id);
+        const idx = selectedFixes.indexOf(id);
+        if (idx === -1) {
+          if (selectedFixes.length < 2) {
+            selectedFixes.push(id);
+            setRefraxLine(fix.line);
+          }
+        } else {
+          selectedFixes.splice(idx, 1);
+          setRefraxLine("Pulled that one back out. No harm done.");
+        }
+        renderFixes();
+        renderBuildSummary();
+        updateFixesFooter();
+      });
+    });
+  }
+
+  function updateFixesFooter() {
+    document.getElementById('fixesCount').textContent = selectedFixes.length + ' of 2 selected';
+    document.getElementById('fixesNext').classList.toggle('enabled', selectedFixes.length === 2);
+  }
+
+  /* ===================== STEP 3: BOOST ===================== */
+  function renderBoost() {
+    const wrap = document.getElementById('boostRow');
+    wrap.innerHTML = BOOSTS.map(b => {
+      const isSel = selectedBoost === b.id;
+      return '<div class="choice-card' + (isSel ? ' selected' : '') + '" data-id="' + b.id + '" data-kind="boost">' +
+        '<div class="choice-check">' + (isSel ? '&#10003;' : '') + '</div>' +
+        '<div><div class="choice-name">' + b.name + ' &mdash; ' + b.sub + '</div><div class="choice-desc">' + b.desc + '</div></div>' +
+        '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        const boost = BOOSTS.find(b => b.id === id);
+        selectedBoost = (selectedBoost === id) ? null : id;
+        if (selectedBoost) setRefraxLine(boost.line);
+        renderBoost();
+        renderBuildSummary();
+        updateBoostFooter();
+      });
+    });
+  }
+
+  function updateBoostFooter() {
+    document.getElementById('boostCount').textContent = (selectedBoost ? 1 : 0) + ' of 1 selected';
+    document.getElementById('boostNext').classList.toggle('enabled', !!selectedBoost);
+  }
+
+  /* ===================== STEP 4: TEST ===================== */
+  function runTest() {
+    const partsMatch = MISSION.correctParts.every(id => selectedParts.includes(id)) && selectedParts.length === 3;
+    const fixesMatch = MISSION.correctFixes.every(id => selectedFixes.includes(id)) && selectedFixes.length === 2;
+    const boostMatch = selectedBoost === MISSION.correctBoost;
+    const fullMatch = partsMatch && fixesMatch && boostMatch;
+
+    const box = document.getElementById('resultBox');
+    box.classList.add('show');
+    if (fullMatch) {
+      box.className = 'result-box show result-ok';
+      box.textContent = 'Excellent, fully optimized. The vibrations are locking into one clean note.';
+      setRefraxLine("There it is. Listen to that, one clean note. You did that.");
+    } else {
+      box.className = 'result-box show result-warn';
+      box.textContent = 'It runs, but it is not fully optimized yet. Something in this combination is not quite locking in.';
+      setRefraxLine("Close. It's holding together, but it's not singing yet. Want to try a different combination?");
+    }
+    tested = true;
+    document.getElementById('testFooter').style.display = 'flex';
+  }
+
+  /* ===================== STEP 5: QBIT VISUAL (real QbitFX) ===================== */
+  function renderQbitStage() {
+    // Build tags reflect the player's actual choices, real data, not invented ones
+    const tagsWrap = document.getElementById('qbitBuildTags');
+    const partTags = selectedParts.map(id => '<span class="qbit-tag">' + ALL_PARTS.find(p => p.id === id).name + '</span>').join('');
+    const fixTags = selectedFixes.map(id => '<span class="qbit-tag">' + id + '</span>').join('');
+    const boostTag = selectedBoost ? '<span class="qbit-tag boost-tag">' + selectedBoost + '</span>' : '';
+    tagsWrap.innerHTML = partTags + fixTags + boostTag;
+
+    // QbitFX reads window.state.selected on every draw frame to decide which
+    // overlays to render (splitter beam, readout scanline, F:: chroma edge,
+    // C// contrast, SH echo, PH~ bloom/sparkles, G0 vignette, EN≡ echo).
+    // Parts/fixes/boosts are kept in the shape QbitFX expects: boosts is an array.
+    window.state = window.state || {};
+    window.state.selected = {
+      parts: selectedParts,
+      fixes: selectedFixes,
+      boosts: selectedBoost ? [selectedBoost] : []
+    };
+
+    if (window.QbitFX) {
+      window.QbitFX.setBaseFromURL('/sprites/harmonic_fork_base_512.mp4');
+    } else {
+      console.warn('[Forge] QbitFX not loaded yet');
+    }
+
+    // Real VoicePicker module — renders the 3-chip how/fails/like mechanism
+    // picker for this mission. School-safe, no free text, feeds Continuum probes.
+    if (window.VoicePicker) {
+      window._forgeStepReached = 2; // VoicePicker's save-gate checks this is >= 2
+      window.VoicePicker.render('harmonic_tuning');
+    } else {
+      console.warn('[Forge] VoicePicker not loaded yet');
+    }
+  }
+
+  /* ===================== STEP 5: NAME / SAVE ===================== */
+  function saveQbit() {
+    const name = document.getElementById('qbitNameInput').value.trim();
+    const confirmBox = document.getElementById('saveConfirm');
+    if (!name) {
+      confirmBox.className = 'result-box show result-warn';
+      confirmBox.style.display = 'block';
+      confirmBox.textContent = 'Give your Qbit a name first.';
+      return;
+    }
+    if (window.VoicePicker && !window.VoicePicker.isComplete()) {
+      confirmBox.className = 'result-box show result-warn';
+      confirmBox.style.display = 'block';
+      confirmBox.textContent = 'Pick all three to describe how it works before saving.';
+      return;
+    }
+
+    const mechanism = window.VoicePicker ? window.VoicePicker.getMechanism() : '';
+
+    // Matches the forged-Qbit record shape the real ForgedQbitsStore expects:
+    // name, mission id, the actual selections, QbitFX slider/effect settings,
+    // and the VoicePicker story/mechanism so the artifact carries meaning,
+    // not just a build list.
+    const forgedQbit = {
+      name: name,
+      mission_id: 'harmonic_tuning',
+      role: 'Harmonic Tuning — make vibrations sing as one',
+      parts: selectedParts,
+      fixes: selectedFixes,
+      boost: selectedBoost,
+      fx: window.QbitFX ? window.QbitFX.getSliders() : null,
+      story: mechanism,
+      mechanism: mechanism
+    };
+    console.log('[Forge] Qbit saved:', forgedQbit);
+
+    confirmBox.className = 'result-box show result-ok';
+    confirmBox.style.display = 'block';
+    confirmBox.textContent = 'Qbit forged as "' + name + '" — ' + mechanism + '. Refrax: "Good name. It suits it."';
+  }
+
+  /* ===================== INIT ===================== */
+  function init() {
+    initBackground();
+    renderStepTracker();
+    renderBuildSummary();
+    renderParts();
+    renderFixes();
+    renderBoost();
+    updatePartsFooter();
+    updateFixesFooter();
+    updateBoostFooter();
+
+    document.getElementById('partsNext').addEventListener('click', () => {
+      if (selectedParts.length === 3) goToStep(2);
+    });
+    document.getElementById('fixesNext').addEventListener('click', () => {
+      if (selectedFixes.length === 2) goToStep(3);
+    });
+    document.getElementById('boostNext').addEventListener('click', () => {
+      if (selectedBoost) goToStep(4);
+    });
+    document.getElementById('testBtn').addEventListener('click', runTest);
+    document.getElementById('testNext').addEventListener('click', () => {
+      goToStep(5);
+      renderQbitStage();
+    });
+    document.getElementById('saveBtn').addEventListener('click', saveQbit);
+
+    renderRecaps();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

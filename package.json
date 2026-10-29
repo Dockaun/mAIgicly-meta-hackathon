@@ -1,0 +1,27 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:init": "node db/init.js",
+    "test:qbit": "node tests/qbit-persistence.test.js",
+    "test:continuum": "node --test tests/continuum-*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.11",
+    "@neondatabase/serverless": "^1.0.1",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
+    "express": "^5.1.0",
+    "openai": "^5.19.1"
+  }
+}

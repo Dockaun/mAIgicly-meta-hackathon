@@ -1,0 +1,44 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="quantumGradient" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.8" />
+        <stop offset="100%" style="stop-color:#fb7185;stop-opacity:0.3" />
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge> 
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    
+    <!-- Background -->
+    <rect width="200" height="200" fill="#000011"/>
+    
+    <!-- Quantum field -->
+    <circle cx="100" cy="100" r="80" fill="url(#quantumGradient)" filter="url(#glow)">
+      <animate attributeName="r" values="75;85;75" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Orbiting particles -->
+    <circle cx="100" cy="50" r="3" fill="#fbbf24" filter="url(#glow)">
+      <animateTransform attributeName="transform" attributeType="XML" type="rotate" 
+        from="0 100 100" to="360 100 100" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="150" r="3" fill="#fb7185" filter="url(#glow)">
+      <animateTransform attributeName="transform" attributeType="XML" type="rotate" 
+        from="180 100 100" to="540 100 100" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Central quantum core -->
+    <circle cx="100" cy="100" r="8" fill="#ffffff" opacity="0.9" filter="url(#glow)">
+      <animate attributeName="r" values="6;10;6" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Name label -->
+    <text x="100" y="190" text-anchor="middle" fill="#ffffff" font-family="Arial" font-size="12" opacity="0.8">
+      entanglement
+    </text>
+  </svg>

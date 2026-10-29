@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About mAIgicly</title>
+    <style>
+        /* Basic Body Styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        /* Main Container & Header */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 40px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #7dd3fc, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Grid Layout for Blocks */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        /* Individual Block Styling */
+        .info-block {
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.1);
+        }
+
+        .info-block img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 0 auto 20px auto;
+            background-color: #333;
+            border: none;
+            display: block;
+        }
+
+        .info-block h2 {
+            font-size: 1.8rem;
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .info-block p {
+            font-size: 1rem;
+            color: #b0b0b0;
+            flex-grow: 1;
+        }
+
+        /* Button Styling - Smaller and more subtle */
+        .btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #7dd3fc, #a78bfa);
+            color: #000000;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #a78bfa, #7dd3fc);
+            color: #000000;
+            transform: translateY(-1px);
+        }
+
+        .btn-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn.expanded .btn-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Expandable Content */
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            text-align: left;
+            margin-top: 0;
+        }
+
+        .expandable-content.expanded {
+            max-height: 1000px;
+            margin-top: 20px;
+        }
+
+        .expandable-content p {
+            color: #d0d0d0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        /* Comic Button in Top Right */
+        .comic-btn-corner {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #7dd3fc, #a78bfa);
+            color: #000000;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.7rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 0 25px rgba(125, 211, 252, 0.7), 0 0 40px rgba(167, 139, 250, 0.4);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(125, 211, 252, 0.7), 0 0 40px rgba(167, 139, 250, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(125, 211, 252, 0.9), 0 0 60px rgba(167, 139, 250, 0.6);
+            }
+        }
+
+        .comic-btn-corner:hover {
+            background: linear-gradient(135deg, #a78bfa, #7dd3fc);
+            box-shadow: 0 0 40px rgba(167, 139, 250, 1), 0 0 70px rgba(125, 211, 252, 0.7);
+            transform: translateY(-2px);
+            animation: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 800px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .comic-btn-corner {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="comic.html" class="comic-btn-corner">The Comic</a>
+
+    <main class="container">
+        <h1>About <span class="gradient-text">mAIgicly</span></h1>
+
+        <div class="grid-container">
+
+            <div class="info-block">
+                <div>
+                    <img src="about/comic-page-1.png" alt="A page from the mAIgicly comic book showing the story's beginning.">
+                    <h2>The Vision</h2>
+                    <p>
+                    In an age of AI, we believe the most powerful human act is to create. Discover the philosophy behind mAIgicly and our mission to build the next generation of creative sandboxes for inventors and builders.
+                    </p>
+                    <div class="expandable-content" id="vision-content">
+                        
+                        <p>We see creation itself as a quantum event. Imagine a space filled with a wave of infinite possibilities—every idea for a tool, a behavior, or a solution exists within it. The act of creation, of focusing your intent and making choices, is a resonance: it collapses the wave of the imagined into the tangible reality of the invented.
+                            
+                            <p>We design and build systems that let a new generation of thinkers and inventors transform potential into action, learning by doing at the most fundamental level. mAIgicly is the first step: a quantum-themed sandbox where play becomes invention, and every creation lasts.</p>
+                    </div>
+                </div>
+                <button class="btn" onclick="toggleExpand('vision')">Our Philosophy <span class="btn-arrow">▼</span></button>
+            </div>
+
+            <div class="info-block">
+                <div>
+                    <img src="about/chamber-view.png" alt="A view inside one of the glowing, high-tech Qbit chambers.">
+                    <h2>The Experience</h2>
+                    <p>
+                        Embark on a story-driven adventure to construct a virtual quantum computer. Meet the living Qbits, master the Forge, and evolve from a guided apprentice to a master inventor.
+                    </p>
+                    <div class="expandable-content" id="experience-content">
+
+                        <p>Level One opens with four voiced Qbits—Chrona, Refrax, Magnetica, and Violet Flicker—each representing a core quantum function. An AI agent greets you with, “What would you make with me?” The AI responds dynamically, offering in-character dialogue that reflects both the participant’s choices and the underlying quantum mechanics, helping guide decisions and inspire creative solutions.</p>
+
+                            <p>Inside live chambers, participants make small, precise moves—splitting signals, nudging phase, stabilizing readouts, and linking channels. Every action changes the outcome in real time, and success in one chamber triggers a conversation with the next Qbit. </p>
+
+                        <p>Progression unlocks the Forge—a live, interactive workspace where creators put their accumulated skills into action. They design their own Qbits to complete missions by selecting parts, applying fixes and boosts, and adjusting six dynamic sliders, experimenting with what they discovered in the chambers. Each creation becomes a replayable, function-bearing asset with a specific mission role. Over time, inventors assemble a simulated quantum computer, built entirely from the Qbits they have mastered and forged.</p>
+                    </div>
+                </div>
+                <button class="btn" onclick="toggleExpand('experience')">Explore the Journey <span class="btn-arrow">▼</span></button>
+            </div>
+
+            <div class="info-block">
+                <div>
+                    <img src="about/ai-interaction.png" alt="Screenshot of the AI collaborator interacting with the player in the Forge.">
+                    <h2>The Design</h2>
+                    <p>
+                        Learn how we transform complex quantum concepts into fun, character-driven challenges through a unique design of metaphor and hands-on action.
+                    </p>
+                    <div class="expandable-content" id="design-content">
+                        <p>Every mechanic maps to a real quantum principle—superposition becomes split and fringe control, phase shift becomes precise nudges, decoherence becomes stabilization. This is not about reading definitions; it’s about solving live challenges with tangible consequences.</p>
+                        <p>The Qbits are living characters—quantum waves and elements that constantly morph, generating new challenges, adventures, and tools for endless creative possibilities. Chrona embodies phase and temporal flow, Refrax reflects, refracts, and bends light, Magnetica shapes magnetic fields, and Violet Flicker ignites plasma sparks—each offering unique behaviors that can be explored, combined, and reimagined in infinite ways.</p>
+                        <p>The Forge is a live compositor. Adjust a slider and the Qbit responds instantly; apply a boost and procedural effects unfold in real time. The system is designed to feel like an instrument, where mastery comes from experimentation rather than instruction.</p>
+                    </div>
+                </div>
+                <button class="btn" onclick="toggleExpand('design')">The Adventure is the Lesson <span class="btn-arrow">▼</span></button>
+            </div>
+
+            <div class="info-block">
+                <div>
+                    <img src="about/forge-view.png" alt="The creative Forge interface where players design their own Qbits.">
+                    <h2>The Roadmap</h2>
+                    <p>
+                        The first adventure is just the beginning. See our plans for a connected multiplayer universe, immersive VR integration, and future real-world applications.
+                    </p>
+                    <div class="expandable-content" id="roadmap-content">
+                        <p><strong>Version 1 Payoff:</strong> Assemble and stabilize a working quantum computer and use the Forge to compose function-bearing Qbits mapped to mission types.</p>
+                        <p><strong>Multiplayer Vision:</strong> Co-op chamber runs where teams solve challenges together, shared Resonance Galleries where players can view, play and remix each other's Qbits, and optional trading for rare or high-performing creations.</p>
+                        <p><strong>Beyond V1:</strong> Expand into real-world quantum invention scenarios, integrate haptic feedback for tactile interaction with quantum states, develop VR chambers for full immersion, and add 3D modeling tools for visual Qbit design. Long-term, we see mAIgicly as a platform where creative invention meets real scientific exploration.</p>
+                    </div>
+                </div>
+                <button class="btn" onclick="toggleExpand('roadmap')">See What's Next <span class="btn-arrow">▼</span></button>
+            </div>
+
+        </div>
+    </main>
+
+    <div style="text-align: center; margin-top: 60px; padding-bottom: 40px;">
+        <a href="/" style="color: #7dd3fc; text-decoration: none; font-size: 1.1rem; transition: color 0.3s ease;">
+            ← Back to Landing Page
+        </a>
+    </div>
+
+    <script>
+        function toggleExpand(section) {
+            const content = document.getElementById(section + '-content');
+            const button = event.target.closest('.btn');
+            
+            content.classList.toggle('expanded');
+            button.classList.toggle('expanded');
+        }
+    </script>
+
+</body>
+</html>

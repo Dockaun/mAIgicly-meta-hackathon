@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mAIgicly — Analytics Health</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #060c14;
+    color: #e0f0ff;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: .5px; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #6a9abf; margin-bottom: 32px; }
+  .subtitle span { color: #3af; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
+
+  .card {
+    background: rgba(20,40,60,.6);
+    border: 1px solid rgba(100,170,220,.2);
+    border-radius: 12px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.ok    { border-color: rgba(52,211,153,.35); }
+  .card.error { border-color: rgba(248,113,113,.4); }
+
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .dot {
+    width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .ok    .dot { background: #34d399; box-shadow: 0 0 8px #34d399; }
+  .error .dot { background: #f87171; box-shadow: 0 0 8px #f87171; animation: none; }
+  .loading .dot { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-name  { font-size: 11px; color: #5a8ab0; font-family: monospace; margin-top: 2px; }
+
+  .stat-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: #7aabcf; }
+  .stat-value { font-weight: 600; font-family: monospace; }
+  .stat-value.good { color: #34d399; }
+  .stat-value.warn { color: #fbbf24; }
+  .stat-value.bad  { color: #f87171; }
+
+  .error-msg { font-size: 12px; color: #f87171; background: rgba(248,113,113,.1); border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-family: monospace; word-break: break-all; }
+
+  .footer { font-size: 12px; color: #4a7a9f; text-align: center; }
+  .footer span { color: #3af; }
+
+  .overall {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(20,40,60,.5);
+    border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 24px; font-size: 14px; font-weight: 600;
+  }
+  .overall.ok    { border: 1px solid rgba(52,211,153,.4); color: #34d399; }
+  .overall.error { border: 1px solid rgba(248,113,113,.4); color: #f87171; }
+  .overall.loading { border: 1px solid rgba(96,165,250,.3); color: #60a5fa; }
+  .overall-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .ok .overall-dot    { background: #34d399; }
+  .error .overall-dot { background: #f87171; }
+  .loading .overall-dot { background: #60a5fa; }
+  .overall-ts { margin-left: auto; font-size: 11px; font-weight: 400; color: #4a7a9f; font-family: monospace; }
+
+  #refreshBtn {
+    background: rgba(58,170,255,.15); border: 1px solid rgba(58,170,255,.3);
+    color: #3af; font-size: 12px; padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; transition: background .2s;
+  }
+  #refreshBtn:hover { background: rgba(58,170,255,.25); }
+  .top-bar { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>📡 Analytics Health</h1>
+    <div class="subtitle">mAIgicly — auto-refresh every <span>30s</span></div>
+  </div>
+  <button id="refreshBtn" onclick="load()">↺ Refresh now</button>
+</div>
+
+<div id="overall" class="overall loading">
+  <div class="overall-dot"></div>
+  <span id="overallText">Checking…</span>
+  <span class="overall-ts" id="checkedAt"></span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="footer">Bookmark <span>/admin/health</span> — check this any time you suspect tracking is broken.</div>
+
+<script>
+async function load() {
+  const btn = document.getElementById('refreshBtn');
+  btn.textContent = '↺ Checking…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/analytics-health');
+    const data = await res.json();
+    render(data);
+  } catch(e) {
+    renderError(e.message);
+  } finally {
+    btn.textContent = '↺ Refresh now';
+    btn.disabled = false;
+  }
+}
+
+function fmt(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString();
+}
+
+function ago(ts) {
+  if (!ts) return 'never';
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+function stalenessClass(ts) {
+  if (!ts) return 'bad';
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 3600)  return 'good';
+  if (diff < 86400) return 'warn';
+  return 'bad';
+}
+
+function render(data) {
+  const overall = document.getElementById('overall');
+  overall.className = 'overall ' + (data.ok ? 'ok' : 'error');
+  document.getElementById('overallText').textContent = data.ok
+    ? 'All analytics tables healthy'
+    : '⚠️  One or more tables are missing or unwriteable';
+  document.getElementById('checkedAt').textContent = 'checked ' + ago(data.checked_at);
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  for (const [name, info] of Object.entries(data.tables || {})) {
+    const card = document.createElement('div');
+    card.className = 'card ' + (info.ok ? 'ok' : 'error');
+
+    if (info.ok) {
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="dot"></div>
+          <div>
+            <div class="card-title">${info.label}</div>
+            <div class="card-name">${name}</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Last write</span>
+          <span class="stat-value ${stalenessClass(info.last_write)}">${ago(info.last_write)}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Writes — last hour</span>
+          <span class="stat-value ${info.writes_last_hour > 0 ? 'good' : 'warn'}">${fmt(info.writes_last_hour)}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Writes — last 24 h</span>
+          <span class="stat-value">${fmt(info.writes_last_24h)}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total rows</span>
+          <span class="stat-value">${fmt(info.total_rows)}</span>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="dot"></div>
+          <div>
+            <div class="card-title">${info.label}</div>
+            <div class="card-name">${name}</div>
+          </div>
+        </div>
+        <div class="error-msg">🚨 ${info.error || 'Unknown error'}</div>
+      `;
+    }
+    grid.appendChild(card);
+  }
+}
+
+function renderError(msg) {
+  document.getElementById('overall').className = 'overall error';
+  document.getElementById('overallText').textContent = '⚠️  Could not reach health endpoint';
+  document.getElementById('grid').innerHTML = `<div class="card error"><div class="error-msg">🚨 ${msg}</div></div>`;
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

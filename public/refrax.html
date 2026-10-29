@@ -1,0 +1,185 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Refrax Chamber</title>
+  <script src="/js/global-points.js?v=2"></script>
+  <script src="/js/analytics.js?v=3"></script>
+  <script src="/js/architect-id.js"></script>
+  <script src="/js/chamber-completion.js?v=1"></script>
+  <script src="/js/star-rating.js"></script>
+  <style>
+    :root {
+      /* --- REFRAX GLASS THEME --- */
+      /* Deep Blue Glass Tint */
+      --glass-surface: rgba(10, 20, 40, 0.75); 
+      /* Cyan Glow Border */
+      --glass-border: rgba(0, 243, 255, 0.3); 
+      
+      /* Existing Game Variables (Mapped to new look) */
+      --panel: var(--glass-surface); 
+      --card: rgba(17, 26, 42, 0.6); /* Cards are also slightly see-through */
+      --line: rgba(87, 211, 255, 0.15); /* Subtle cyan lines */
+      
+      --text: #ffffff; 
+      --accent: #7dd3fc; 
+      --good: #34d399;
+    }
+    
+    *{box-sizing:border-box} html{height:100%;background:#05070d} body{min-height:100%}
+    
+    body {
+      margin:0; color:var(--text);
+      font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      /* Background Art */
+      background:#000 url("/assets/jpgs/refrax/refrax-chamber.webp?v=2") center/cover fixed no-repeat;
+    }
+
+    /* GLASS HEADER */
+    header {
+      display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;
+      padding:14px 18px;
+      border-bottom:1px solid var(--glass-border);
+      /* Gradient Glass */
+      background: linear-gradient(180deg, rgba(10,20,40,0.9), rgba(10,20,40,0.6));
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    
+    header h1{font-size:18px;margin:0; text-shadow: 0 0 10px rgba(0,243,255,0.3);}
+    
+    .stats{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .pill{background:rgba(17,26,42,0.8);border:1px solid var(--line);padding:6px 10px;border-radius:999px;display:flex;gap:8px;align-items:center}
+    .btn{cursor:pointer;background:var(--accent);color:#062231;border:0;border-radius:10px;padding:8px 12px;font-weight:600}
+    .ghost{background:transparent;color:#fff;border:1px solid var(--line)}
+
+    .wrap{max-width:1120px;margin:20px auto;padding:0 16px;display:grid;grid-template-columns:320px 1fr;gap:16px}
+
+    /* --- THE NEW GLASS PANEL --- */
+    .panel {
+      background: var(--glass-surface);
+      
+      /* The Refractive Blur */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      
+      /* The Cyan Edge */
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 12px;
+      
+      /* Lift off background */
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    h2{font-size:16px;margin:0 0 8px 0;color:#fff}
+    .copy, .muted, .desc { color:#e0f2fe } /* Slightly cyan-tinted white text */
+
+    .avatar{height:140px;display:flex;align-items:center;justify-content:center;border-radius:12px;
+      background:radial-gradient(120% 120% at 50% 0%, #0f1d3a 0%, #0a1329 60%);border:1px solid var(--line);
+      overflow:hidden;margin-bottom:10px}
+    .avatar img{max-height:120px;filter:drop-shadow(0 0 10px rgba(147,197,253,.35))}
+
+    .mods{display:flex;gap:10px;flex-wrap:wrap}
+    .mod{position:relative;user-select:none;cursor:grab;background:var(--card);border:1px dashed var(--line);
+      padding:10px 12px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;color:#fff}
+    .mod b{font-family:ui-monospace, Menlo, monospace}
+
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    
+    .part{
+      min-height:128px;
+      background:radial-gradient(120% 120% at 20% 0%, rgba(16,27,51,0.8) 0%, rgba(13,21,42,0.9) 100%);
+      border:1px solid var(--line);border-radius:12px;padding:10px;position:relative
+    }
+    .part h3{font-size:14px;margin:0 0 6px;color:#fff}
+    .part.done{outline:2px solid var(--good)}
+    .mini{margin-top:8px;background:rgba(15,24,48,0.5);border:1px solid var(--line);border-radius:10px;padding:8px}
+    
+    .row{display:flex;gap:8px;align-items:center}
+    .track{flex:1;height:18px;border:1px solid var(--line);border-radius:999px;position:relative;background:#0c1426}
+    .band{position:absolute;top:3px;bottom:3px;background:rgba(125,211,252,.18);border-radius:999px}
+    .marker{position:absolute;top:-6px;width:2px;height:30px;background:#b9d4ff}
+    .bar{height:10px;background:#0c1426;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .fill{height:100%;width:0;background:var(--good)}
+
+    /* Short tooltips */
+    .mod.tip[data-tip]::after, .part.tip[data-tip]::after {
+      content: attr(data-tip); position:absolute; left:50%; bottom:110%;
+      transform: translate(-50%, -4px); background:#0b1630; color:#fff; border:1px solid #3b4e7a;
+      padding:6px 8px; border-radius:8px; font-size:12px; line-height:1.25;
+      max-width:240px; text-align:center; white-space:normal; z-index:50;
+      box-shadow:0 6px 16px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
+    }
+    .mod.tip[data-tip]::before, .part.tip[data-tip]::before {
+      content:""; position:absolute; left:50%; bottom:106%; transform:translateX(-50%);
+      border:6px solid transparent; border-top-color:#3b4e7a; opacity:0; transition:opacity .15s;
+    }
+    .mod.tip[data-tip]:hover::after, .mod.tip[data-tip]:hover::before, .part.tip[data-tip]:hover::after, .part.tip[data-tip]:hover::before {
+      opacity:1; transform: translate(-50%, -8px);
+    }
+
+    .elements {
+      font-family: ui-monospace, Menlo, monospace; font-size: 14px; color: #7dd3fc; margin: 4px 0 8px 0;
+    }
+    
+    @media (max-width: 767px) {
+      header { padding: 12px 14px; }
+      header h1 { font-size: 16px; }
+      .stats { width: 100%; justify-content: flex-start; }
+      .pill { font-size: 14px; padding: 5px 8px; }
+      .btn { padding: 6px 10px; font-size: 14px; min-height: 44px; }
+      .wrap { grid-template-columns: 1fr; gap: 12px; margin: 12px auto; padding: 0 12px; }
+      .panel { padding: 10px; }
+      .avatar { height: 120px; margin-bottom: 8px; }
+      .avatar img { max-height: 100px; }
+      .grid { grid-template-columns: 1fr; gap: 12px; }
+      .part { min-height: 100px; padding: 8px; }
+      .part h3 { font-size: 13px; }
+      .mod { padding: 8px 10px; min-height: 44px; cursor: pointer; }
+      .mods { gap: 8px; }
+      h2 { font-size: 15px; }
+      .copy { font-size: 14px; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Refrax Chamber</h1>
+      <p class="elements" style="margin: 0;">Si (14), B (5)</p>
+    </div>
+    <div class="stats">
+      <span class="pill">Level: <b id="level">1</b></span>
+      <span class="pill">Points: <b id="points">0</b></span>
+      <button class="btn ghost" onclick="window.location.href='/resonance'">Resonance</button>
+      <a href="/completion-log.html" class="btn ghost" style="text-decoration: none;">Engineering Log</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="panel">
+      <div class="avatar">
+        <img id="refraxGif" src="/assets/gifs/refrax/refrax.gif?v=1" alt="Refrax"/>
+      </div>
+
+      <h2>Mods</h2>
+      <p class="copy">Fix each part by dragging the right Mod. Earn points to forge your own Qbits.</p>
+      <div class="mods" id="mods"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Mission</h2>
+      <p class="copy">
+        Refrax routes light so the system can read the data it carries. Its Si/B optics create multiple reflections, which can confuse the sensor. Isolate one steady, high-contrast stripe that the sensor can decode. Duplicates or drifting stripes are considered noise.
+      </p>
+      <div class="grid" id="chamber"></div>
+    </section>
+  </div>
+
+  <script type="module" src="./refrax.js?v=4"></script>
+  <script src="/js/system-map.js"></script>
+</body>
+</html>

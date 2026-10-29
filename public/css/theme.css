@@ -1,0 +1,36 @@
+/* ── Space Grotesk — loaded once, applied globally ──────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:        #0b0f1a;
+  --text:      #e2e8f0;
+  --line:      #24304d;
+  --card:      #151d33;
+  --panel:     #0f1526;
+  --font-main: "Space Grotesk", system-ui, -apple-system, sans-serif;
+}
+
+body, button, input, textarea, select,
+p, h1, h2, h3, h4, h5, h6, li, td, th, label, a {
+  font-family: var(--font-main);
+}
+
+/* ── Global contrast baseline ────────────────────────────────────────────── */
+body {
+  color: #e2e8f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+}
+
+/* Ghost buttons — readable border and text */
+.btn.ghost, button.ghost, a.ghost {
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+
+/* Card-like surfaces — visible against dark backgrounds */
+.card, .panel, .qbit-slot, .mission-card, .hud-panel {
+  background: rgba(255, 255, 255, 0.07);
+}

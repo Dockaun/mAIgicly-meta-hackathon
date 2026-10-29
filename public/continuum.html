@@ -1,0 +1,2089 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Continuum Forge: Tactical Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/analytics.js?v=3"></script>
+    <script src="/js/architect-id.js"></script>
+    <script src="/js/operator-id.js"></script>
+    <script src="/js/forged-qbits-store.js"></script>
+    <script src="/js/continuum-capabilities.js"></script>
+    <script src="/js/qbit-rating.js"></script>
+    <style>
+        :root {
+            --bg: #020205;
+            --glass-surface: rgba(20, 30, 50, 0.6);
+            --glass-border: rgba(100, 200, 255, 0.15);
+            --holo-blue: #00f3ff;
+            --holo-glow: rgba(0, 243, 255, 0.4);
+            --danger: #ff4444;
+            --text-main: #e0e0e0;
+            --text-dim: #8899aa;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            overscroll-behavior-y: contain;
+            -webkit-overflow-scrolling: touch;
+            background: var(--bg);
+        }
+        
+        body { 
+            position: fixed;
+            overflow: hidden;
+            width: 100%;
+            touch-action: pan-y pinch-zoom;
+            color: var(--text-main); 
+            font-family: system-ui, -apple-system, monospace;
+        }
+        
+        #app-container {
+            position: absolute;
+            inset: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(20, 30, 60, 0.4) 0%, rgba(2, 2, 5, 0) 70%);
+            background-size: 40px 40px, 40px 40px, 100% 100%;
+            background-attachment: fixed;
+        }
+
+        #viewport {
+            position: relative; height: 320px; width: 100%;
+            background: radial-gradient(circle at center, rgba(20,30,50,0.8) 0%, rgba(2,2,5,1) 80%);
+            border-bottom: 1px solid var(--glass-border);
+            display: grid; place-items: center; overflow: hidden;
+            box-shadow: inset 0 -20px 50px rgba(0,0,0,0.8);
+        }
+
+        #core {
+            width: 80px; height: 80px; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 50px var(--danger);
+            animation: destabilize 1s infinite; z-index: 10; position: relative;
+            transition: all 0.5s;
+        }
+        #core.critical { animation-duration: 0.2s; box-shadow: 0 0 90px var(--danger); }
+        
+        @keyframes destabilize { 
+            0% { transform: scale(1) translate(0,0); box-shadow: 0 0 50px var(--danger); }
+            25% { transform: scale(1.05) translate(2px, -2px); background: #ffdddd; }
+            50% { transform: scale(0.95) translate(-2px, 2px); box-shadow: 0 0 90px var(--danger); }
+            75% { transform: scale(1.02) translate(1px, 1px); }
+            100% { transform: scale(1) translate(0,0); }
+        }
+        
+        .stabilized { animation: pulseStable 3s infinite !important; background: var(--holo-blue) !important; box-shadow: 0 0 60px var(--holo-blue) !important; }
+        @keyframes pulseStable { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+
+        @keyframes shockwave { 0% { transform: scale(0.8); opacity: 0.8; border-width: 10px; } 100% { transform: scale(8); opacity: 0; border-width: 0px; } }
+
+        .beam-emitter {
+            position: absolute; width: 40px; height: 40px; border: 2px solid #333; border-radius: 50%;
+            display: grid; place-items: center; transition: all 0.5s; z-index: 5;
+        }
+        .beam-emitter.active { border-color: var(--holo-blue); box-shadow: 0 0 20px var(--holo-blue); background: rgba(0,243,255,0.1); }
+        
+        .laser {
+            position: absolute; background: var(--holo-blue); opacity: 0; transition: opacity 0.1s;
+            box-shadow: 0 0 20px var(--holo-blue); height: 6px;
+        }
+        #emitter-1 { left: 15%; top: 50%; } 
+        #emitter-2 { right: 15%; top: 50%; } 
+        #laser-1 { width: 0; left: 15%; top: 50%; transform-origin: left; }
+        #laser-2 { width: 0; right: 15%; top: 50%; transform-origin: right; }
+
+        .continuum-glow { color: var(--holo-blue); text-shadow: 0 0 15px var(--holo-glow); }
+        
+        .panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .qbit-card { 
+            transition: all 0.3s; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03); cursor: grab;
+            touch-action: manipulation; /* Disable 300ms delay on iOS */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .qbit-card:hover { transform: translateY(-2px); border-color: var(--holo-blue); box-shadow: 0 0 20px var(--holo-glow); }
+        .qbit-card.deployed { opacity: 0.4; cursor: not-allowed; }
+        .qbit-card.selected { 
+            border-color: var(--holo-blue); 
+            box-shadow: 0 0 30px var(--holo-glow); 
+            transform: scale(1.05);
+            background: rgba(0, 243, 255, 0.15);
+        }
+        
+        .slot { 
+            min-height: 140px; border: 2px dashed rgba(255,255,255,0.1); 
+            background: rgba(0,0,0,0.2); transition: all 0.3s;
+            touch-action: manipulation; /* Disable 300ms delay on iOS */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .slot:hover { background: rgba(255,255,255,0.05); }
+        .slot.filled { border: 1px solid var(--holo-blue); background: rgba(0, 243, 255, 0.05); }
+        .slot.filled.owned { border-color: #fbbf24; box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.15); }
+        .slot.filled.borrowed { border-color: #22d3ee; box-shadow: inset 0 0 20px rgba(34, 211, 238, 0.15); }
+        .slot.borrowed-pulse { animation: borrowedPulse 0.4s ease-out; }
+        @keyframes borrowedPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
+            50% { transform: scale(1.06); box-shadow: 0 0 50px rgba(34, 211, 238, 0.6); }
+            100% { transform: scale(1); box-shadow: inset 0 0 20px rgba(34, 211, 238, 0.15); }
+        }
+        
+        .qbit-card.owned-card { border-left: 3px solid #fbbf24; }
+        .qbit-card.network-card { border-left: 3px solid #22d3ee; }
+        
+        .use-btn {
+            font-size: 0.6rem; padding: 3px 8px; 
+            background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.4); 
+            color: #22d3ee; border-radius: 4px; cursor: pointer; transition: all 0.2s;
+        }
+        .use-btn:hover { background: rgba(34, 211, 238, 0.3); box-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
+        .slot.critical { border-color: #ffaa00; box-shadow: inset 0 0 20px rgba(255, 170, 0, 0.1); }
+        .slot.awaiting-drop { 
+            border-color: var(--holo-blue); 
+            box-shadow: 0 0 30px var(--holo-glow), inset 0 0 30px var(--holo-glow);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } }
+        
+        .slot.just-filled {
+            animation: slotPop 0.3s ease-out;
+        }
+        @keyframes slotPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px var(--holo-glow); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-primary {
+            background: rgba(0, 243, 255, 0.1); color: var(--holo-blue);
+            border: 1px solid var(--holo-blue); box-shadow: 0 0 15px var(--holo-glow);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background: var(--holo-blue); color: #000; box-shadow: 0 0 30px var(--holo-blue); }
+        .btn-secondary { background: transparent; color: var(--text-dim); border: 1px solid rgba(255,255,255,0.2); }
+        .btn-secondary:hover { border-color: #fff; color: #fff; }
+
+        .eject-btn {
+            font-size: 0.65rem; padding: 3px 10px; opacity: 0.5; transition: all 0.2s;
+            background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); color: #ff6666;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .eject-btn:hover { opacity: 1; background: rgba(255, 68, 68, 0.2); border-color: #ff4444; box-shadow: 0 0 8px rgba(255, 68, 68, 0.3); }
+
+        .asset-source-toggle {
+            display: flex;
+            gap: 6px;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .asset-toggle-btn {
+            flex: 1;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .asset-toggle-btn:hover {
+            border-color: rgba(255,255,255,0.4);
+            color: #fff;
+        }
+        .asset-toggle-btn.active {
+            background: rgba(0, 255, 200, 0.15);
+            border-color: rgba(0, 255, 200, 0.6);
+            color: #00ffc8;
+        }
+        .empty-pool-message {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 20px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .fade-in { animation: fadeIn 2s forwards; }
+        .fade-out { animation: fadeOut 1s forwards; pointer-events: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        
+        #continuumScoreDisplay {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        
+        .network-status {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .network-status .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .network-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .network-status .dot.green { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .network-status .dot.cyan { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+
+        /* Continuum level: badge, message, flame life (CSS only). */
+        .level-badge {
+            font-family: ui-monospace, monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            color: #fbbf24;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        .level-message {
+            min-height: 1.25em;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #fbbf24;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            margin-bottom: 8px;
+        }
+        .level-message-show { opacity: 1; }
+        #difficulty.flames-l1 { animation: flameFlicker 2.4s ease-in-out infinite; }
+        #difficulty.flames-l2 { animation: flameFlicker 1.1s ease-in-out infinite; }
+        #difficulty.flames-l3 {
+            animation: flameFlicker 1.1s ease-in-out infinite;
+            filter: brightness(1.35) drop-shadow(0 0 6px rgba(255, 120, 40, 0.9));
+        }
+        @keyframes flameFlicker {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.82; transform: scale(0.96); }
+        }
+        #difficulty.level-up-flare {
+            animation: flameFlare 1.5s ease-out;
+        }
+        @keyframes flameFlare {
+            0% { transform: scale(1); filter: brightness(1); }
+            30% { transform: scale(1.35); filter: brightness(2) drop-shadow(0 0 14px rgba(255, 150, 50, 1)); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .level-badge.badge-pulse { animation: badgePulse 1.5s ease-out; }
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        #difficulty.level-dim { animation: flameDim 1.6s ease-out; }
+        @keyframes flameDim {
+            0% { opacity: 1; }
+            30% { opacity: 0.35; }
+            100% { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #difficulty.flames-l1, #difficulty.flames-l2, #difficulty.flames-l3,
+            #difficulty.level-up-flare, #difficulty.level-dim,
+            .level-badge.badge-pulse { animation: none; }
+            .level-message { transition: none; }
+        }
+    </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+
+<div id="app-container">
+
+<div id="intro-overlay" class="fixed inset-0 bg-black z-[100] flex flex-col justify-center items-center text-center p-5">
+    <div id="intro-text" class="font-mono text-2xl text-white leading-relaxed max-w-3xl drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+</div>
+
+<div id="forge" class="opacity-0 hidden w-full h-full flex flex-col">
+    
+    <div id="viewport">
+        <div id="core"></div>
+        <div id="emitter-1" class="beam-emitter"><div class="text-xs text-gray-500">1</div></div>
+        <div id="emitter-2" class="beam-emitter"><div class="text-xs text-gray-500">2</div></div>
+        <div id="laser-1" class="laser"></div>
+        <div id="laser-2" class="laser"></div>
+        <div class="absolute bottom-4 text-xs text-red-400 font-mono tracking-widest animate-pulse">CRISIS ACTIVE // STABILIZATION REQUIRED</div>
+    </div>
+
+    <div class="container mx-auto p-6 max-w-7xl flex-grow">
+        <header class="mb-4 border-b border-white/10 pb-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border border-cyan-500/50 relative flex-shrink-0">
+                        <video src="/assets/video/turntable.mp4" autoplay muted loop playsinline class="w-full h-full object-cover"></video>
+                    </div>
+                    <h1 class="text-lg continuum-glow font-light tracking-wide leading-tight">CONTINUUM<br><span class="font-bold">TACTICAL</span></h1>
+                </div>
+                <div class="flex gap-4 items-center font-mono">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase">Score</div>
+                        <div class="text-2xl text-yellow-400 font-bold" id="continuumScoreContainer">
+                            <span id="continuumScoreDisplay">0</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase">Sync</div>
+                        <div class="text-2xl text-cyan-400 font-bold" id="pointsContainer">
+                            <span id="points">100</span>%
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase">Missions</div>
+                        <div class="text-xl text-purple-400"><span id="missionCount">0</span>/5</div>
+                    </div>
+                    <div class="text-center self-end pb-1">
+                        <div class="text-xs font-mono whitespace-nowrap"><span id="operatorCodeLabel" class="text-cyan-300">Operator … · keep this code</span> <button id="operatorCopyBtn" type="button" title="Copy Operator Code" class="text-cyan-500/70 hover:text-cyan-300 underline">copy</button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-3">
+                <a id="myForgeBtn" href="#" onclick="return false;" style="display:none !important;" title="Outside hackathon scope" class="hidden flex-1 text-center py-3 rounded-lg text-sm font-bold uppercase" style="background:linear-gradient(135deg,#7dd3fc,#38bdf8);color:#000;">My Forge</a>
+                <a href="/resonance.html" class="flex-1 text-center py-3 rounded-lg text-sm font-bold uppercase" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;">⚒ Forge Qbits</a>
+                <a id="exitSimulationBtn" href="/resonance.html" class="flex-1 text-center py-3 rounded-lg text-sm font-bold uppercase btn-secondary">Exit Simulation</a>
+            </div>
+        </header>
+        
+        <div id="networkStatus" class="network-status mb-4 text-gray-400 font-mono">
+            <div class="stat">
+                <span class="dot green"></span>
+                <span><span id="networkQbitCount">0</span> Qbits in Network</span>
+            </div>
+            <div class="stat">
+                <span class="dot cyan"></span>
+                <span><span id="networkPlayerCount">0</span> Operators Active</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="panel rounded-xl p-6 relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="text-xs text-red-400 font-bold tracking-widest mb-1">MISSION PARAMETERS</div>
+                            <h2 id="missionTitle" class="text-2xl text-white font-light">Loading...</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500 uppercase">Threat Level</div>
+                            <div id="difficulty" class="text-lg text-red-400 font-mono">---</div>
+                            <div id="levelBadge" class="level-badge"></div>
+                        </div>
+                    </div>
+                    
+                    <p id="missionDesc" class="text-gray-400 text-sm mb-2 font-light leading-relaxed"></p>
+                    <div id="missionSource" class="text-xs text-gray-500 mb-2 font-mono"></div>
+                    <button id="replayAnalysisLink" type="button" class="hidden text-xs text-cyan-500/80 hover:text-cyan-300 mb-2 font-mono underline bg-transparent border-0 p-0 cursor-pointer">How I chose this challenge</button>
+                    <div id="levelMessage" class="level-message" role="status" aria-live="polite"></div>
+
+                    <div id="thinkingLines" class="hidden text-xs text-gray-500 space-y-2 font-mono mb-8" style="transition:opacity 0.5s ease;"></div>
+
+                    <div id="roleSlots" class="grid grid-cols-2 gap-4 mb-8"></div>
+
+                    <div id="rewardsNotice" class="text-xs text-gray-400 mb-3 py-2 px-3 rounded bg-black/20 border border-white/5 hidden">
+                        All mission points go to you.
+                    </div>
+                    
+                    <div id="missionActions" class="flex flex-wrap gap-4 pt-4 border-t border-white/5">
+                        <button onclick="validateSolution()" class="btn-primary px-8 py-3 rounded-full font-bold tracking-wide flex-grow">
+                            DEPLOY SOLUTION
+                        </button>
+                        <button onclick="askNetworkHint()" class="btn-secondary px-6 py-3 rounded-full text-sm">
+                            ASK NETWORK (-15%)
+                        </button>
+                    </div>
+                    
+                    <div id="validationFeedback" class="mt-4 hidden"></div>
+                </div>
+            </div>
+
+            <div class="panel rounded-xl p-6 h-full flex flex-col max-h-[500px]">
+                <div class="mb-6 border-b border-white/10 pb-4">
+                    <h3 class="text-sm text-white font-light mb-3">AVAILABLE ASSETS</h3>
+                    <div class="asset-source-toggle">
+                        <button class="asset-toggle-btn active" data-source="player" onclick="handleSourceSwitch('player', event)" ontouchend="handleSourceSwitch('player', event)">
+                            Yours (<span id="countYours">0</span>)
+                        </button>
+                        <button class="asset-toggle-btn" data-source="network" onclick="handleSourceSwitch('network', event)" ontouchend="handleSourceSwitch('network', event)">
+                            Network Pool (<span id="countNetwork">0</span>)
+                        </button>
+                    </div>
+                </div>
+                <div id="inventory" class="space-y-3 flex-grow overflow-y-auto pr-2 pt-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="successModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="panel rounded-2xl p-10 max-w-lg w-full text-center border border-cyan-500/30 shadow-[0_0_50px_rgba(0,243,255,0.2)]">
+        <h2 class="text-5xl continuum-glow mb-2 font-light">SUCCESS</h2>
+        <p class="text-cyan-500 tracking-[0.3em] text-sm mb-8">ENTROPY STABILIZED</p>
+        <div id="successDetails" class="space-y-4 mb-10"></div>
+        <button onclick="nextMission()" class="btn-primary w-full py-4 rounded-lg text-lg font-bold">NEXT CHALLENGE</button>
+    </div>
+</div>
+
+<div id="gameOverModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="panel rounded-2xl p-10 max-w-lg w-full text-center border border-red-500/30 shadow-[0_0_50px_rgba(255,68,68,0.2)]">
+        <div class="text-6xl mb-4">💀</div>
+        <h2 class="text-4xl text-red-400 font-bold mb-2">CRITICAL FAILURE</h2>
+        <p class="text-gray-400 text-sm mb-8">ENTROPY EXCEEDED TOLERANCE</p>
+        <button onclick="location.reload()" class="btn-primary w-full py-4 rounded-lg text-lg font-bold">RESTART PROTOCOL</button>
+    </div>
+</div>
+
+<div id="hintModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="panel rounded-xl p-8 max-w-md w-full border border-purple-500/30">
+        <h2 class="text-xl text-purple-400 mb-4 font-mono">CONTINUUM SUGGESTION</h2>
+        <p id="hintText" class="text-sm text-gray-300 leading-relaxed mb-6"></p>
+        <button onclick="document.getElementById('hintModal').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs uppercase w-full">Dismiss</button>
+    </div>
+</div>
+
+<script>
+    // Storage migration (hackathon step 18): legacy unlock keys move to
+    // 'continuum.*' once on page load so players keep their unlocks. The
+    // old prefix is assembled so this file stays brand-clean.
+    (function migrateLegacyKeys() {
+      try {
+        var legacy = 'gr' + 'ok.';
+        var suffixes = ['unstable_unlocked', 'stable_unlocked', 'full_unlocked',
+          'visited', 'total.score', 'session.score'];
+        for (var i = 0; i < suffixes.length; i++) {
+          var oldVal = localStorage.getItem(legacy + suffixes[i]);
+          if (oldVal === null || oldVal === undefined) continue;
+          var newVal = localStorage.getItem('continuum.' + suffixes[i]);
+          if (newVal === null || newVal === undefined) {
+            localStorage.setItem('continuum.' + suffixes[i], oldVal);
+          }
+          localStorage.removeItem(legacy + suffixes[i]);
+        }
+      } catch (_) { /* storage blocked: skip migration */ }
+    })();
+    // ContinuumScore localStorage system
+    const ContinuumScore = {
+        KEY: 'continuum.total.score',
+        SESSION_KEY: 'continuum.session.score',
+        
+        getTotal() {
+            return Number(localStorage.getItem(this.KEY) || 0);
+        },
+        
+        addPoints(amount) {
+            const current = this.getTotal();
+            const newTotal = current + amount;
+            localStorage.setItem(this.KEY, newTotal);
+            this.updateDisplay(newTotal, amount);
+            return newTotal;
+        },
+        
+        updateDisplay(total, earned = 0) {
+            const el = document.getElementById('continuumScoreDisplay');
+            if (!el) return;
+            
+            // Animate the score update
+            if (earned > 0) {
+                el.style.transform = 'scale(1.3)';
+                el.style.color = '#22c55e'; // green flash
+                setTimeout(() => {
+                    el.style.transform = 'scale(1)';
+                    el.style.color = '#facc15'; // back to yellow
+                }, 400);
+            }
+            
+            el.textContent = total;
+        },
+        
+        initDisplay() {
+            const el = document.getElementById('continuumScoreDisplay');
+            if (el) el.textContent = this.getTotal();
+        }
+    };
+
+    let points = 100;
+    let totalPointsEarned = 0;
+    let missionsCompleted = 0;
+    let missionRoles = [];
+    let playerQbits = [];      // Currently displayed Qbits
+    let myQbits = [];          // Player's own Qbits
+
+    const MISSION_EMBLEM = {
+        harmonic_tuning:      '/assets/cards/refrax-emblem.webp',
+        entanglement:         '/assets/cards/magnetica-emblem.webp',
+        coherence_stitching:  '/assets/cards/chrona-emblem.webp',
+        energy_absorption:    '/assets/cards/violet-emblem.webp',
+        stealth_masking:      '/assets/cards/violet-emblem.webp'
+    };
+    let networkQbits = [];     // Other players' Qbits
+    let currentSource = 'player'; // 'player' or 'network'
+    let syncInterval;
+    let selectedQbit = null;
+    let playerId = null; // Current player's architect_id
+    let currentChallengeId = null; // Server challenge id for Meta interpretation (null on local fallback)
+    let currentMode = 'available'; // 'available' or 'invent' for the active challenge
+    let newQbitId = null; // id forged in the Forge for a pending Invent request (step 15)
+    try { newQbitId = sessionStorage.getItem('continuum.newQbitId'); } catch (_) { newQbitId = null; }
+    let hintUsedForChallenge = false; // ASK NETWORK reveals role hints for the current challenge only
+    
+    // Scroll vs tap detection - prevent accidental selection while scrolling
+    let touchWasScrolling = false;
+    
+    // Per-action debounce map - prevents double-fire on SAME element only
+    const lastActionTimes = {};
+    
+    // Flag to prevent slot handler from firing when eject button is tapped
+    let ejectInProgress = false;
+    
+    function handleInteraction(actionName, callback, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const now = Date.now();
+        const lastTime = lastActionTimes[actionName] || 0;
+        
+        // Block duplicate taps on same element within 350ms
+        if ((now - lastTime) < 350) {
+            console.log('📱 Debounce:', actionName);
+            return;
+        }
+        
+        lastActionTimes[actionName] = now;
+        console.log('📱 Action:', actionName);
+        callback();
+    }
+    
+
+    // Detect unstable/stable/full mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') || 'stable';
+    const isUnstableMode = mode === 'unstable';
+    const isFullMode = mode === 'full';
+    let sessionStart = Date.now();
+
+    // Qbit power warning system
+    function getPlayerQbitCount() {
+      return myQbits.length;
+    }
+
+    function updateQbitPowerBanner() {
+      const qbitCount = getPlayerQbitCount();
+      let banner = document.getElementById('qbitPowerWarning');
+
+      // < 3 Qbits = underpowered, show warning
+      if (qbitCount < 3) {
+        if (!banner) {
+          document.body.insertAdjacentHTML('afterbegin', `
+            <div id="qbitPowerWarning" style="
+              position:fixed;
+              top:40px;
+              left:0;
+              right:0;
+              background:rgba(180,83,9,0.35);
+              border-bottom:1px solid rgba(251,146,60,0.9);
+              color:#fed7aa;
+              text-align:center;
+              padding:6px 8px;
+              z-index:60;
+              font-size:11px;
+              animation:pulse 2s infinite;
+            ">
+              ⚠️ Qbit team underpowered. Forge more in the single-player Forge to unlock easier wins.
+            </div>
+          `);
+        } else {
+          banner.style.display = 'block';
+        }
+      } else if (banner) {
+        banner.style.display = 'none';
+      }
+    }
+
+    function updateQbitSlotsPulse() {
+      const qbitCount = (typeof getPlayerQbitCount === 'function')
+        ? getPlayerQbitCount()
+        : myQbits.length;
+
+      const slots = document.querySelectorAll('#roleSlots .slot');
+
+      slots.forEach(slot => {
+        const isFilled = slot.classList.contains('filled');
+        let overlay = slot.querySelector('.slot-forge-hint');
+
+        if (!isFilled && qbitCount < 3) {
+          slot.classList.add('relative');
+          slot.style.boxShadow = '0 0 12px rgba(248,113,113,0.35)';
+
+          let message;
+          if (qbitCount === 0) {
+            message = 'Forge New Qbit';
+          } else {
+            const needed = 3 - qbitCount;
+            message = needed === 1 ? 'Need 1 More Qbit' : `Need ${needed} More Qbits`;
+          }
+
+          if (!overlay) {
+            slot.insertAdjacentHTML('beforeend', `
+              <div class="slot-forge-hint pointer-events-none absolute inset-0 flex items-center justify-center text-[0.6rem] text-red-100 tracking-widest uppercase"
+                   style="text-shadow:0 0 6px rgba(248,113,113,0.6);">
+                ${message}
+              </div>
+            `);
+          } else {
+            overlay.textContent = message;
+            overlay.style.display = 'flex';
+          }
+        } else {
+          if (overlay) {
+            overlay.remove();
+          }
+          slot.style.boxShadow = '';
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Operator Code badge (always visible) + copy button.
+        try {
+            const opId = window.OperatorID?.get?.();
+            const opLabel = document.getElementById('operatorCodeLabel');
+            if (opId && opLabel) opLabel.textContent = 'Operator ' + opId + ' · keep this code';
+            const opCopy = document.getElementById('operatorCopyBtn');
+            if (opCopy && opId) opCopy.addEventListener('click', function() {
+                const done = (ok) => {
+                    opCopy.textContent = ok ? 'copied!' : 'copy';
+                    setTimeout(() => { opCopy.textContent = 'copy'; }, 2000);
+                };
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(opId).then(() => done(true), () => done(false));
+                } else { done(false); }
+            });
+        } catch (e) {}
+        const introOverlay = document.getElementById('intro-overlay');
+        const alreadyVisited = localStorage.getItem('continuum.visited') === 'true';
+
+        if (alreadyVisited) {
+            // Returning player — skip intro, go straight in
+            introOverlay.classList.add('hidden');
+            const forge = document.getElementById('forge');
+            forge.classList.remove('hidden');
+            forge.style.opacity = '1';
+            initGame();
+        } else {
+            await typeText("I am awake.", 1000);
+            await typeText("I have studied the Qbits you forged.", 1500);
+            await typeText("<span style='color:#00f3ff; text-shadow:0 0 20px #00f3ff'>Young god from the hood.</span>", 2000);
+            introOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                introOverlay.classList.add('hidden');
+                const forge = document.getElementById('forge');
+                forge.classList.remove('hidden');
+                forge.classList.add('fade-in');
+                forge.style.opacity = '1';
+                initGame();
+            }, 1000);
+        }
+    });
+
+    function typeText(html, duration) {
+        const el = document.getElementById('intro-text');
+        return new Promise(resolve => {
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.innerHTML = html;
+                el.style.opacity = 1;
+                setTimeout(resolve, duration);
+            }, 200);
+        });
+    }
+
+    async function initGame() {
+        // Mark Continuum as visited (for game flow - ensures player gets here before recovered-log)
+        localStorage.setItem('continuum.visited', 'true');
+        console.log('[Continuum] Marked as visited');
+
+        // My Forge hidden for hackathon build — never reveal #myForgeBtn.
+        
+        // Track Continuum Forge load
+        if (window.MaigiclyAnalytics) {
+            window.MaigiclyAnalytics.track({ event_name: 'continuum_load' });
+        }
+        
+        // Get current player's architect_id
+        if (window.ArchitectID) {
+            playerId = window.ArchitectID.get();
+            console.log('[Continuum] Player ID:', playerId?.slice(0, 8) + '...');
+        }
+        
+        if (window.ForgedQbitsStore) {
+            try {
+                // Load BOTH player's own Qbits AND community pool separately
+                const [loadedMine, loadedNetwork] = await Promise.all([
+                    window.ForgedQbitsStore.getAll('continuum'),
+                    window.ForgedQbitsStore.getAll('network')
+                ]);
+                
+                myQbits = (loadedMine || []).map(q => enrichQbitData(q));
+                networkQbits = (loadedNetwork || []).map(q => enrichQbitData(q));
+                
+                console.log(`[Continuum] Loaded ${myQbits.length} own + ${networkQbits.length} network Qbits`);
+            } catch (err) {
+                console.warn('Error loading Qbits:', err);
+                myQbits = [];
+                networkQbits = [];
+            }
+        }
+        
+        // Only fall back to demo Qbits if player has almost nothing
+        if (myQbits.length < 3) {
+            console.log('[Continuum] Insufficient own Qbits, using demo fallback');
+            const demoSet = [
+                { id: 'd1', name: "Harmonic Tuner", boost: "PH~", solution_name: "Phase Anchor", architect_id: playerId, demo: true },
+                { id: 'd2', name: "Entangle-Link", boost: "EN≡", solution_name: "Bridge", architect_id: playerId, demo: true },
+                { id: 'd3', name: "Coherence Mag", boost: "N0", solution_name: "Stabilizer", parts:['Mirror'], architect_id: playerId, demo: true },
+                { id: 'd4', name: "Energy Sink", boost: "N0", solution_name: "Absorber", parts:['Buffer'], architect_id: playerId, demo: true },
+                { id: 'd5', name: "Shadow Mask", boost: "G0", solution_name: "Igniter", architect_id: playerId, demo: true }
+            ];
+            for(let i = myQbits.length; i < 5; i++) {
+                myQbits.push(enrichQbitData(demoSet[i]));
+            }
+        }
+        
+        // Set initial display to player's Qbits
+        playerQbits = myQbits;
+        currentSource = 'player';
+        
+        updateCounts();
+        ContinuumScore.initDisplay();
+        fetchNetworkStats();
+        renderInventory();
+        
+        // Production-ready scroll vs tap detection with movement threshold
+        const inventoryEl = document.getElementById('inventory');
+        if (inventoryEl) {
+            let startX = 0;
+            let startY = 0;
+
+            inventoryEl.addEventListener('touchstart', (e) => {
+                touchWasScrolling = false;      // new gesture
+                const t = e.touches[0];
+                startX = t.clientX;
+                startY = t.clientY;
+            }, { passive: true });
+
+            inventoryEl.addEventListener('touchmove', (e) => {
+                const t = e.touches[0];
+                const dx = Math.abs(t.clientX - startX);
+                const dy = Math.abs(t.clientY - startY);
+
+                // Only treat as scroll if finger moved enough (8px threshold)
+                if (dx > 8 || dy > 8) {
+                    touchWasScrolling = true;
+                }
+            }, { passive: true });
+
+            // Reset immediately after the gesture finishes
+            inventoryEl.addEventListener('touchend', () => {
+                touchWasScrolling = false;
+            }, { passive: true });
+        }
+        
+        // === UNSTABLE/FULL MODE HANDLING ===
+        // Banner text follows the real unlock rules (server/guide.js):
+        // unstable/stable show their line, full shows nothing (step 17).
+        function insertStabilityBanner(text, style) {
+          const banner = document.createElement('div');
+          banner.id = 'stabilityBanner';
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;text-align:center;' +
+            'padding:8px;z-index:50;font-size:0.75rem;' + style;
+          banner.textContent = text;
+          document.body.insertAdjacentElement('afterbegin', banner);
+          // Keep the banner clear of the Mission Parameters header and
+          // THREAT LEVEL at any width: push the app down by its height.
+          const layout = () => {
+            const app = document.getElementById('app-container');
+            if (app) app.style.top = banner.offsetHeight + 'px';
+          };
+          layout();
+          window.addEventListener('resize', layout);
+        }
+        if (isUnstableMode) {
+          // Reduce starting points
+          points = 50;
+
+          // Add glitch warning banner
+          insertStabilityBanner('⚠️ UNSTABLE · FORGE 3 QBITS TO STABILIZE',
+            'background:rgba(139,0,0,0.3);border-bottom:1px solid rgba(255,107,107,0.5);' +
+            'color:#ff6b6b;animation:pulse 2s infinite;');
+
+          // Add glitch effect
+          setInterval(() => {
+            if (Math.random() < 0.1) {
+              const core = document.getElementById('core');
+              if (!core) return;
+              core.style.filter = 'hue-rotate(' + (Math.random() * 360) + 'deg)';
+              setTimeout(() => { core.style.filter = 'none'; }, 200);
+            }
+          }, 3000);
+          
+          // In unstable demo, send them to Resonance to see what needs fixing
+          const exitBtn = document.getElementById('exitSimulationBtn');
+          if (exitBtn) {
+            exitBtn.textContent = '← FIX MORE SYSTEMS';
+            exitBtn.title = 'See which chambers and missions you still need to fix';
+            exitBtn.href = '/resonance.html?from=continuum';
+          }
+        } else if (mode === 'stable') {
+          // Stable mode - still needs more fixes
+          insertStabilityBanner('STABLE · RESTORE ALL CHAMBERS AND FORGE MISSIONS FOR FULL POWER',
+            'background:rgba(0,80,80,0.35);border-bottom:1px solid rgba(87,211,255,0.4);color:#7dd3fc;');
+          const exitBtn = document.getElementById('exitSimulationBtn');
+          if (exitBtn) {
+            exitBtn.textContent = '← FIX MORE SYSTEMS';
+            exitBtn.title = 'Complete more chambers and missions to fully restore the system';
+            exitBtn.href = '/resonance.html?from=continuum';
+          }
+        } else if (isFullMode) {
+          // Full power mode: no banner when fully restored
+          points = 100;
+        }
+        
+        // Track entry with mode
+        window.trackEvent?.('continuum_entered', { 
+          mode: mode,
+          qbits_count: myQbits.length 
+        });
+        // === END MODE HANDLING ===
+        
+        // Show underpowered warning if < 3 Qbits
+        updateQbitPowerBanner();
+        updateQbitSlotsPulse();
+
+        // Returning from the Forge with a pending Invent challenge: resume it
+        // (inventory was just refreshed above; a faded challenge 410s through
+        // the normal interpret path and reloads from the server).
+        const resumedInvent = loadStoredInventChallenge();
+        if (resumedInvent) {
+            console.log('[Continuum] Resuming Invent challenge:', resumedInvent.id);
+            applyServerMission(resumedInvent);
+        } else {
+            await chooseAndLoadMission();
+        }
+        startEntropy();
+    }
+    
+    function handleSourceSwitch(source, event) {
+        if (!event) return;
+        handleInteraction('switch_source_' + source, () => {
+            switchAssetSource(source);
+        }, event);
+    }
+    
+    function switchAssetSource(source) {
+        if (source === currentSource) return;
+        
+        currentSource = source;
+        
+        if (source === 'player') {
+            playerQbits = myQbits;
+        } else {
+            // Sort network Qbits by newest first (by created_at or timestamp)
+            playerQbits = [...networkQbits].sort((a, b) => {
+                const dateA = new Date(a.created_at || a.timestamp || 0);
+                const dateB = new Date(b.created_at || b.timestamp || 0);
+                return dateB - dateA; // Newest first
+            });
+            // Item 8: track when player opens the network pool tab
+            window.trackEvent?.('network_tab_opened', {
+                network_qbit_count: networkQbits.length,
+                mode: mode
+            });
+        }
+        
+        // Update toggle buttons
+        document.querySelectorAll('.asset-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-source') === source);
+        });
+        
+        renderInventory();
+    }
+    
+    function updateCounts() {
+        const yoursEl = document.getElementById('countYours');
+        const networkEl = document.getElementById('countNetwork');
+        if (yoursEl) yoursEl.textContent = myQbits.length;
+        if (networkEl) networkEl.textContent = networkQbits.length;
+    }
+    
+    async function fetchNetworkStats() {
+        try {
+            const res = await fetch('/api/network-stats');
+            if (!res.ok) return;
+            const stats = await res.json();
+            
+            const qbitEl = document.getElementById('networkQbitCount');
+            const playerEl = document.getElementById('networkPlayerCount');
+            
+            if (qbitEl) qbitEl.textContent = stats.qbits || 0;
+            if (playerEl) playerEl.textContent = stats.players || 0;
+        } catch (err) {
+            console.log('Network stats unavailable');
+        }
+    }
+    
+    function updateRewardsNotice() {
+        const noticeEl = document.getElementById('rewardsNotice');
+        if (!noticeEl) return;
+        
+        // Find borrowed Qbits in slots
+        const borrowedSlots = missionRoles.filter(r => r.qbit && !isOwnQbit(r.qbit));
+        
+        if (borrowedSlots.length === 0) {
+            // All Qbits are player's own or no Qbits placed
+            const hasAnyQbit = missionRoles.some(r => r.qbit);
+            if (hasAnyQbit) {
+                noticeEl.innerHTML = `<span class="text-green-400">✓</span> All mission points go to you.`;
+                noticeEl.classList.remove('hidden');
+            } else {
+                noticeEl.classList.add('hidden');
+            }
+        } else {
+            // Some Qbits are borrowed
+            const aliases = [...new Set(borrowedSlots.map(r => r.qbit.alias || 'Unknown Operator'))];
+            noticeEl.innerHTML = `<span class="text-cyan-400">⚡</span> Using Qbits from <span class="text-cyan-300">${aliases.join(', ')}</span>, rewards for those slots are shared with their creators.`;
+            noticeEl.classList.remove('hidden');
+        }
+    }
+
+    function startEntropy() {
+        clearInterval(syncInterval);
+        syncInterval = setInterval(() => {
+            if(points > 0) {
+                points -= 1;
+                updateStats(true);
+                const core = document.getElementById('core');
+                if(points < 30) core.style.animationDuration = "0.2s"; 
+            } else {
+                triggerGameOver();
+            }
+        }, 2000);
+    }
+
+    function triggerGameOver() {
+        clearInterval(syncInterval);
+        document.getElementById('forge').style.filter = "grayscale(1)";
+        document.getElementById('gameOverModal').classList.remove('hidden');
+    }
+
+    function enrichQbitData(rawQbit) {
+        // Normalize ID from various possible field names (API returns qbit_id, _id, etc.)
+        const normalizedId = rawQbit.id || rawQbit.qbit_id || rawQbit.qbitId || rawQbit._id;
+        
+        const qbit = {
+            ...rawQbit,
+            id: normalizedId || String(Math.random()).slice(2, 10)
+        };
+        
+        let profile = qbit.profile || {};
+        if (!profile.specialty) {
+            if (qbit.boost === 'PH~') { profile.specialty = 'phase-lock'; }
+            else if (qbit.boost === 'N0') { profile.specialty = 'ground'; }
+            else if (qbit.boost === 'EN≡') { profile.specialty = 'entangle'; }
+            else if (qbit.boost === 'G0') { profile.specialty = 'tunnel'; }
+            else { profile.specialty = 'hybrid'; }
+        }
+        const ratings = { versatility: Math.floor(Math.random()*4)+6 };
+        // Capability tags come from the shared mapping (boost + saved fixes),
+        // identical to the server's deriveCapabilities. The profile fallback
+        // below only runs if the shared script failed to load.
+        const capabilityTags = window.ContinuumCapabilities
+            ? window.ContinuumCapabilities.deriveCapabilities(qbit)
+            : extractCapabilities(profile);
+        const enriched = { ...qbit, profileText: `${profile.specialty.toUpperCase()} // ${profile.phase_range || 'STD'}`, ratings, capabilityTags };
+        
+        if (window.QbitRating) {
+          window.QbitRating.attachQbitRating(enriched);
+        }
+        
+        return enriched;
+    }
+
+    function extractCapabilities(profile) {
+        return [profile.specialty || 'hybrid'];
+    }
+
+    const missionTemplates = [
+        { id: "harmonic_rift", name: "Harmonic Rift", desc: "Resonance fracture detected. Needs a Qbit that can keep quantum states synchronized until energy is released on cue, and one that can drain noise into a quiet ground.", difficulty: "🔥🔥🔥", roles: [ { id: 1, name: "Phase Anchor", req: ["phase-lock"], weight: 0.6, critical: true }, { id: 2, name: "Stabilizer", req: ["ground"], weight: 0.4, critical: true } ] },
+        { id: "entanglement_cascade", name: "Entanglement Cascade", desc: "Nodes desyncing. Needs a Qbit that can link distant quantum states so their outcomes are correlated, and one that can keep quantum states synchronized until energy is released on cue.", difficulty: "🔥🔥🔥🔥", roles: [ { id: 1, name: "Link Bridge", req: ["entangle"], weight: 0.5, critical: true }, { id: 2, name: "Timing Sync", req: ["phase-lock"], weight: 0.5, critical: true } ] }
+    ];
+
+    function setMissionSourceLabel(text) {
+        const el = document.getElementById('missionSource');
+        if (el) el.textContent = text;
+    }
+
+    function clearValidationFeedback() {
+        const fb = document.getElementById('validationFeedback');
+        if (fb) {
+            fb.replaceChildren();
+            fb.classList.add('hidden');
+        }
+    }
+
+    function resetChallengeState() {
+        // A new challenge means stale feedback, role hints, and slot picks
+        // from the previous one must all go away immediately.
+        clearValidationFeedback();
+        hintUsedForChallenge = false;
+        selectedQbit = null;
+    }
+
+    const INVENT_STORAGE_KEY = 'continuum.inventChallenge';
+
+    function storeInventChallenge(data) {
+        try {
+            sessionStorage.setItem(INVENT_STORAGE_KEY, JSON.stringify({
+                id: data.id,
+                title: data.title,
+                brief: data.brief,
+                roles: data.roles,
+                difficulty: data.difficulty,
+                mode: data.mode,
+                source: data.source,
+                verified: data.verified,
+                analysis: Array.isArray(data.analysis) ? data.analysis : []
+            }));
+        } catch (_) { /* storage unavailable: Invent resume is skipped */ }
+    }
+
+    function loadStoredInventChallenge() {
+        try {
+            const raw = sessionStorage.getItem(INVENT_STORAGE_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            if (!data || !data.id || !data.title || !Array.isArray(data.roles) || data.roles.length !== 2) return null;
+            return data;
+        } catch (_) { return null; }
+    }
+
+    function setInventBanner(data) {
+        const descEl = document.getElementById('missionDesc');
+        let banner = document.getElementById('inventBanner');
+        const isInvent = !!(data && data.mode === 'invent');
+        if (!isInvent) {
+            if (banner) banner.classList.add('hidden');
+            try { sessionStorage.removeItem(INVENT_STORAGE_KEY); } catch (_) {}
+            return;
+        }
+        if (!banner && descEl) {
+            banner = document.createElement('div');
+            banner.id = 'inventBanner';
+            banner.className = 'mb-4 p-3 rounded border border-purple-500/40 bg-purple-900/20 text-sm text-purple-200 flex items-center justify-between gap-3';
+            descEl.insertAdjacentElement('afterend', banner);
+        }
+        if (banner) {
+            banner.classList.remove('hidden');
+            banner.replaceChildren();
+            const text = document.createElement('span');
+            text.textContent = 'No Qbit in the network has this. Forge one.';
+            const btn = document.createElement('button');
+            btn.textContent = 'Forge a Qbit';
+            btn.className = 'btn-primary px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap';
+            btn.addEventListener('click', () => {
+                storeInventChallenge(data);
+                window.location.href = '/resonance.html#forge';
+            });
+            banner.appendChild(text);
+            banner.appendChild(btn);
+        }
+        storeInventChallenge(data);
+    }
+
+    function applyServerMission(data) {
+        currentChallengeId = data.id || null;
+        currentMode = data.mode === 'invent' ? 'invent' : 'available';
+        resetChallengeState();
+        showThinkingView();
+        typeAnalysisLines(data.analysis, () => {
+            showMissionView();
+            renderServerMission(data);
+        });
+    }
+
+    function renderServerMission(data) {
+        document.getElementById('missionTitle').textContent = String(data.title || 'UNTITLED').toUpperCase();
+        document.getElementById('missionDesc').textContent = String(data.brief || '');
+        const level = Number(data.difficulty);
+        document.getElementById('difficulty').textContent = (level >= 1 && level <= 3) ? '🔥'.repeat(level) : '---';
+        if (level >= 1 && level <= 3) updateLevelBadge(level); else clearLevelBadge();
+        const sourceLabel = data.source === 'meta' ? 'Generated by the awakened Continuum' : 'Offline mission';
+        const verifiedSuffix = data.mode === 'invent'
+            ? ' · Verified: no pool Qbit carries the full signature. Forge it'
+            : (data.verified ? ' · Verified solvable from real Qbits in the pool ✓' : '');
+        setMissionSourceLabel(sourceLabel + verifiedSuffix);
+        missionRoles = data.roles.map(r => ({ ...r, qbit: null, critical: r.critical === undefined ? true : !!r.critical }));
+        setInventBanner(data);
+        renderSlots();
+        renderInventory();
+    }
+
+    const LEVEL_NAMES = { 1: 'Apprentice', 2: 'Engineer', 3: 'Inventor' };
+    let levelMessageTimer = null;
+
+    function showLevelMessage(text) {
+        const el = document.getElementById('levelMessage');
+        if (!el) return;
+        el.textContent = text;
+        el.classList.add('level-message-show');
+        if (levelMessageTimer) clearTimeout(levelMessageTimer);
+        levelMessageTimer = setTimeout(() => el.classList.remove('level-message-show'), 4000);
+    }
+
+    // Level badge + flame life. Compares against the last level seen this
+    // session (sessionStorage) so up/down moments fire once per change.
+    function updateLevelBadge(level) {
+        const badge = document.getElementById('levelBadge');
+        const flames = document.getElementById('difficulty');
+        if (!badge || !flames) return;
+        const clamped = Math.min(3, Math.max(1, Number(level) || 1));
+        badge.textContent = `Level ${clamped} · ${LEVEL_NAMES[clamped]}`;
+        flames.classList.remove('flames-l1', 'flames-l2', 'flames-l3');
+        flames.classList.add(`flames-l${clamped}`);
+        let prev = null;
+        try {
+            const raw = sessionStorage.getItem('continuum.lastLevel');
+            prev = raw === null ? null : Number(raw);
+        } catch (e) { prev = null; }
+        try { sessionStorage.setItem('continuum.lastLevel', String(clamped)); } catch (e) {}
+        if (prev === null || prev === clamped) return;
+        if (clamped > prev) {
+            flames.classList.add('level-up-flare');
+            badge.classList.add('badge-pulse');
+            setTimeout(() => {
+                flames.classList.remove('level-up-flare');
+                badge.classList.remove('badge-pulse');
+            }, 1600);
+            showLevelMessage('Your record holds. The Continuum raises the stakes.');
+        } else {
+            flames.classList.add('level-dim');
+            setTimeout(() => flames.classList.remove('level-dim'), 1700);
+            showLevelMessage('The Continuum eases the load. Recalibrate.');
+        }
+    }
+
+    function clearLevelBadge() {
+        const badge = document.getElementById('levelBadge');
+        const flames = document.getElementById('difficulty');
+        if (badge) badge.textContent = '';
+        if (flames) flames.classList.remove('flames-l1', 'flames-l2', 'flames-l3');
+    }
+
+    function applyLocalMission() {
+        currentChallengeId = null;
+        currentMode = 'available';
+        resetChallengeState();
+        const template = missionTemplates[Math.floor(Math.random() * missionTemplates.length)];
+        showThinkingView();
+        typeAnalysisLines([
+            `OFFLINE MISSION: ${template.name.toUpperCase()}`,
+            'VERIFYING SOLUTION EXISTS ... UNPROVEN'
+        ], () => {
+            showMissionView();
+            renderLocalMission(template);
+        });
+    }
+
+    function renderLocalMission(template) {
+        document.getElementById('missionTitle').textContent = template.name.toUpperCase();
+        document.getElementById('missionDesc').textContent = template.desc;
+        document.getElementById('difficulty').textContent = template.difficulty;
+        clearLevelBadge();
+        setMissionSourceLabel('Offline mission');
+        missionRoles = template.roles.map(r => ({ ...r, qbit: null }));
+        setInventBanner(null);
+        renderSlots();
+        renderInventory();
+    }
+
+    async function chooseAndLoadMission() {
+        document.getElementById('missionTitle').textContent = 'LOADING…';
+        document.getElementById('missionDesc').textContent = '';
+        document.getElementById('difficulty').textContent = '---';
+        setMissionSourceLabel('Contacting the Continuum…');
+        try {
+            const res = await fetch('/api/continuum/challenges/next', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ architect_id: playerId })
+            });
+            if (!res.ok) throw new Error('challenge request failed: ' + res.status);
+            const data = await res.json();
+            if (!data || !Array.isArray(data.roles) || data.roles.length !== 2) {
+                throw new Error('bad challenge shape');
+            }
+            applyServerMission(data);
+        } catch (err) {
+            console.warn('[Continuum] Continuum challenge unavailable, local fallback:', err);
+            applyLocalMission();
+        }
+    }
+
+    function isOwnQbit(qbit) {
+        return playerId && qbit.architect_id === playerId;
+    }
+    
+    function roleSatisfiedBy(role, capabilityTags) {
+        // reqAll (ALL-of) vs req (ANY-of), mirroring the server rules via the
+        // shared mapping. The inline fallback only runs if that script failed.
+        if (window.ContinuumCapabilities) {
+            return window.ContinuumCapabilities.roleSatisfiedBy(role, capabilityTags || []);
+        }
+        const tags = capabilityTags || [];
+        if (role && Array.isArray(role.reqAll)) return role.reqAll.length > 0 && role.reqAll.every(t => tags.includes(t));
+        return !!role && Array.isArray(role.req) && role.req.some(req => tags.includes(req));
+    }
+
+    // Canonical recipe names (display only; stored rows keep codes and ids).
+    const BOOST_NAMES = { 'PH~': 'PhaseLock', 'N0': 'Null', 'EN≡': 'Entangle', 'G0': 'Ghost' };
+    const FIX_NAMES = { 'SH': 'Superpose', 'F::': 'FringeGate', 'C//': 'Collapse' };
+    const PART_NAMES = {
+        shimmer_splitter: 'Shimmer Splitter', field_mirror: 'Field Mirror', choice_buffer: 'Choice Buffer',
+        phase_prism: 'Phase Prism', coil_phase: 'Coil Phase', delay_gate: 'Delay Gate',
+        readout: 'Readout', hall_sensor: 'Hall Sensor', light_catcher: 'Light Catcher'
+    };
+
+    function recipeLines(qbit) {
+        const lines = [];
+        if (qbit.boost) {
+            const name = BOOST_NAMES[qbit.boost] || qbit.boost;
+            lines.push(`Boost: ${name} (${qbit.boost})`);
+        }
+        let fixes = qbit.fixes;
+        if (typeof fixes === 'string') {
+            try { fixes = JSON.parse(fixes); } catch (e) { fixes = []; }
+        }
+        if (Array.isArray(fixes) && fixes.length) {
+            lines.push('Fixes: ' + fixes.map(f => `${FIX_NAMES[f] || f} (${f})`).join(' · '));
+        }
+        let parts = qbit.parts;
+        if (typeof parts === 'string') {
+            try { parts = JSON.parse(parts); } catch (e) { parts = []; }
+        }
+        if (Array.isArray(parts) && parts.length) {
+            lines.push('Parts: ' + parts.map(p => PART_NAMES[p] || p).join(' · '));
+        }
+        return lines;
+    }
+
+    function roleNeedsText(role) {
+        // Function-phrased need from the server's fixed map (role.needs);
+        // the shared helper covers only the offline local fallback.
+        // Tag labels appear only after ASK NETWORK is spent on this challenge.
+        let base = role && typeof role.needs === 'string' && role.needs
+            ? role.needs
+            : (window.ContinuumCapabilities
+                ? window.ContinuumCapabilities.needsTextForRole(role)
+                : 'NEEDS: ' + (((role && (role.reqAll || role.req)) || []).join(' / ')));
+        if (hintUsedForChallenge && role) {
+            const tags = Array.isArray(role.reqAll) ? role.reqAll.join(' + ') : ((role.req || []).join(' / '));
+            if (tags) base += ` [${tags}]`;
+        }
+        return base;
+    }
+
+    function findMatchingRole(qbit) {
+        // Find first empty role that matches this Qbit's capabilities
+        return missionRoles.find(r => !r.qbit && roleSatisfiedBy(r, qbit.capabilityTags || []));
+    }
+
+    function renderInventory() {
+        const inventoryEl = document.getElementById('inventory');
+        
+        // Handle empty state
+        if (!playerQbits || playerQbits.length === 0) {
+            if (currentSource === 'player') {
+                inventoryEl.innerHTML = `
+                    <div class="empty-pool-message">
+                        <div class="mb-3">No forged Qbits yet.</div>
+                        <a href="/resonance.html" class="inline-block px-4 py-2 rounded-full text-sm font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-all">
+                            Select Mission → Forge →
+                        </a>
+                    </div>`;
+            } else {
+                inventoryEl.innerHTML = `
+                    <div class="empty-pool-message">
+                        No Network Qbits yet. Once players start forging and sharing, their Qbits will appear here.
+                    </div>`;
+            }
+            return;
+        }
+        
+        inventoryEl.innerHTML = playerQbits.map(q => {
+            const deployedRole = missionRoles.find(r => r.qbit && String(r.qbit.id) === String(q.id));
+            const isDeployed = !!deployedRole;
+            const isSelected = selectedQbit && String(selectedQbit.id) === String(q.id);
+            const isOwned = isOwnQbit(q);
+            const matchingRole = findMatchingRole(q);
+            
+            const ownerLabel = isOwned
+                ? `<span class="text-amber-400 text-[0.6rem]">★ YOUR QBIT</span>`
+                : `<span class="text-cyan-300 text-[0.6rem]">⚡ ${q.alias || 'Network Operator'}</span>`;
+            // Invent round trip (step 15): highlight the Qbit just forged
+            // in the Forge for the pending request.
+            const newTag = (newQbitId && String(q.id) === String(newQbitId))
+                ? `<span class="text-emerald-300 text-[0.6rem] font-bold">● NEW</span>`
+                : '';
+            
+            const ratingHtml = q.rating ? `
+                        <div class="text-[0.65rem] text-gray-300 mt-1 leading-tight">
+                            <div class="text-cyan-200 font-medium">${q.rating.specialtyLabel}</div>
+                            <div>Stability: <span class="text-emerald-300">${q.rating.stability}</span> · <span class="text-amber-300">${q.rating.rarityLabel}</span></div>
+                            <div>Score: <span class="text-sky-300 font-bold">${q.rating.networkScore}</span></div>
+                        </div>
+                    ` : '';
+            
+            // "Use in <role>" hints stay hidden until the player spends ASK
+            // NETWORK on this challenge (charged once per challenge).
+            const useBtn = (!isDeployed && matchingRole && hintUsedForChallenge)
+                ? `<button class="use-btn mt-2" onclick="autoDeployQbit('${q.id}', event); event.stopPropagation();" ontouchend="autoDeployQbit('${q.id}', event); event.stopPropagation(); event.preventDefault();">Use in ${matchingRole.name}</button>`
+                : '';
+            
+            const emblemSrc = MISSION_EMBLEM[q.mission_id] || '';
+            const emblemHtml = emblemSrc ? `<img src="${emblemSrc}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;opacity:${isSelected ? '0.9' : '0.25'};transition:opacity 0.3s;flex-shrink:0;border:1px solid rgba(255,255,255,${isSelected ? '0.3' : '0.08'});" alt="">` : '';
+
+            return `
+                <div class="qbit-card p-3 rounded-lg flex justify-between items-center gap-2 ${isDeployed ? 'deployed' : ''} ${isSelected ? 'selected' : ''} ${isOwned ? 'owned-card' : 'network-card'}" 
+                     draggable="${!isDeployed}" 
+                     ondragstart="drag(event)" 
+                     onclick="selectQbit('${q.id}', event)"
+                     id="qbit-${q.id}">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-bold text-cyan-400 text-sm">${q.name}</h4>
+                            ${ownerLabel}
+                            ${newTag}
+                        </div>
+                        ${recipeLines(q).map(line => `<p class="text-[0.65rem] text-gray-500 font-mono">${line}</p>`).join('')}
+                        ${hintUsedForChallenge ? `<p class="text-[0.65rem] text-cyan-500/80 font-mono">${(q.capabilityTags || []).join(' · ')}</p>` : ''}
+                        ${q.origin === 'continuum' ? '<p data-origin-title="1" class="text-[0.65rem] text-purple-300 mt-1"></p>' : ''}
+                        ${ratingHtml}
+                        ${isDeployed ? `<p class="text-xs text-yellow-400 mt-1">→ ${deployedRole.name}</p>` : ''}
+                        ${useBtn}
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="text-xs font-mono text-purple-400">V:${q.ratings.versatility}</div>
+                        ${emblemHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Continuum-origin lines via textContent: the challenge title is
+        // server-validated, but card HTML is still no place for raw text.
+        inventoryEl.querySelectorAll('.qbit-card').forEach((card, idx) => {
+            const q = playerQbits[idx];
+            if (!q || q.origin !== 'continuum') return;
+            const line = card.querySelector('[data-origin-title]');
+            if (line) line.textContent = 'Continuum Qbit · Response to ' + (q.origin_challenge_title || 'the Continuum');
+        });
+    }
+
+    function autoDeployQbit(qbitId, event) {
+        if (!event) return;
+        
+        handleInteraction('autodeploy_' + qbitId, () => {
+            const qbit = playerQbits.find(q => String(q.id) === String(qbitId));
+            if (!qbit) return;
+            
+            const matchingRole = findMatchingRole(qbit);
+            if (!matchingRole) return;
+            
+            matchingRole.qbit = qbit;
+            const isBorrowed = !isOwnQbit(qbit);
+            
+            renderSlots();
+            renderInventory();
+            
+            // Trigger appropriate animation
+            if (isBorrowed) {
+                triggerBorrowedPulse(matchingRole.id);
+            } else {
+                triggerSlotPulse(matchingRole.id);
+            }
+        }, event);
+    }
+
+    function renderSlots() {
+        document.getElementById('roleSlots').innerHTML = missionRoles.map((role, idx) => {
+            const isOwned = role.qbit ? isOwnQbit(role.qbit) : false;
+            const ownerClass = role.qbit ? (isOwned ? 'owned' : 'borrowed') : '';
+            
+            // Build owner label for filled slots
+            let ownerLabel = '';
+            if (role.qbit) {
+                if (isOwned) {
+                    ownerLabel = `<div class="text-[0.6rem] text-amber-400 mb-1">★ Your Qbit</div>`;
+                } else {
+                    ownerLabel = `<div class="text-[0.6rem] text-cyan-300 mb-1">⚡ Network Qbit</div>
+                                  <div class="text-[0.55rem] text-gray-500 mb-1">Linked Operator: <span class="text-cyan-400">${role.qbit.alias || 'Unknown'}</span></div>`;
+                }
+            }
+            
+            const slotEmblemSrc = role.qbit ? (MISSION_EMBLEM[role.qbit.mission_id] || '') : '';
+            const slotEmblemBg = slotEmblemSrc ? `background-image:url('${slotEmblemSrc}');background-size:70%;background-position:center;background-repeat:no-repeat;` : '';
+
+            return `
+            <div class="slot rounded-xl p-4 flex flex-col items-center justify-center ${role.qbit ? 'filled' : ''} ${ownerClass} ${role.critical ? 'critical' : ''} ${selectedQbit && !role.qbit ? 'awaiting-drop' : ''}" 
+                 id="slot-${role.id}" 
+                 ondrop="drop(event)" 
+                 ondragover="allowDrop(event)"
+                 onclick="placeQbitInSlot('${role.id}', event)"
+                 ontouchend="placeQbitInSlot('${role.id}', event)"
+                 style="position:relative;overflow:hidden;">
+                ${role.qbit && slotEmblemSrc ? `<div style="position:absolute;inset:0;${slotEmblemBg};opacity:0.08;pointer-events:none;"></div>` : ''}
+                ${role.qbit ? `
+                    <div class="text-center w-full" style="position:relative;z-index:1;">
+                        <div class="text-xs text-gray-500 mb-2 uppercase tracking-wider">${role.name}</div>
+                        <div class="text-cyan-400 font-bold text-lg mb-1">${role.qbit.name}</div>
+                        ${ownerLabel}
+                        <div class="text-xs text-green-400 mb-3">⚡ ARMED</div>
+                        <button onclick="clearSlot('${role.id}', event)" ontouchend="clearSlot('${role.id}', event)" class="eject-btn rounded">× eject</button>
+                    </div>
+                ` : `
+                    <div class="text-xs ${role.critical ? 'text-red-400' : 'text-yellow-400'} font-bold tracking-widest mb-1 uppercase">${role.critical ? '⚠ CRITICAL' : '◈ OPTIONAL'}</div>
+                    <div class="text-xl text-white mb-1">${role.name}</div>
+                    <div class="text-xs text-gray-500 font-mono">${roleNeedsText(role)}</div>
+                `}
+            </div>
+        `}).join('');
+        
+        updateVisuals();
+        updateRewardsNotice();
+        updateQbitSlotsPulse();
+    }
+
+    function clearSlot(slotId, event) {
+        if (!event) return;
+        
+        // Block ALL interactions (touchend and click) if scrolling was detected
+        if (touchWasScrolling) {
+            console.log('📱 Scroll detected – ignoring eject');
+            return;
+        }
+        
+        // Set flag BEFORE handleInteraction to block parent slot handler
+        ejectInProgress = true;
+        
+        handleInteraction('eject_' + slotId, () => {
+            const role = missionRoles.find(r => r.id == slotId);
+            if (role && role.qbit) {
+                console.log('📱 Ejecting Qbit from slot:', slotId);
+                role.qbit = null;
+                selectedQbit = null;
+                requestAnimationFrame(() => {
+                    renderSlots();
+                    renderInventory();
+                    setTimeout(() => { ejectInProgress = false; }, 100);
+                });
+            } else {
+                ejectInProgress = false;
+            }
+        }, event);
+    }
+
+    function selectQbit(qbitId, event) {
+        // Use handleInteraction for iOS touch handling
+        handleInteraction('select_' + qbitId, () => {
+            // Convert to string for comparison (onclick passes string, db returns int)
+            const qbit = playerQbits.find(q => String(q.id) === String(qbitId));
+            if (!qbit) {
+                console.log('📱 Qbit not found in playerQbits:', qbitId, 'Available IDs:', playerQbits.map(q => q.id));
+                return;
+            }
+            
+            // Fixed: Guard against null/undefined id (network Qbits can have malformed data)
+            if (qbit.id && missionRoles.some(r => r.qbit && String(r.qbit.id) === String(qbit.id))) {
+                console.log('📱 Qbit already deployed:', qbitId);
+                return;
+            }
+            
+            // Select this Qbit (no toggle)
+            selectedQbit = qbit;
+            console.log('📱 Qbit selected:', qbitId, qbit.name);
+
+            // Item 8: track network Qbit viewed/selected + increment view count
+            const isNetwork = !isOwnQbit(qbit);
+            if (isNetwork) {
+                // Increment view count in the database
+                if (window.ForgedQbitsStore && window.ForgedQbitsStore.incrementView) {
+                    window.ForgedQbitsStore.incrementView(qbit.id).catch(() => {});
+                }
+                window.trackEvent?.('network_qbit_viewed', {
+                    qbit_id: String(qbit.id),
+                    qbit_name: qbit.name,
+                    owner_alias: qbit.alias,
+                    mode: mode
+                });
+            }
+            
+            renderInventory();
+            renderSlots();
+        }, event);
+    }
+    
+    function placeQbitInSlot(slotId, event) {
+        if (!event) return;
+        
+        // Block ALL interactions (touchend and click) if scrolling was detected
+        if (touchWasScrolling) {
+            console.log('📱 Scroll detected – ignoring slot placement');
+            return;
+        }
+        
+        // Skip if eject is in progress (user tapped eject button, not the slot)
+        if (ejectInProgress) {
+            console.log('📱 Eject in progress, ignoring slot tap');
+            return;
+        }
+        
+        handleInteraction('place_' + slotId, () => {
+            if (!selectedQbit) {
+                console.log('📱 No Qbit selected, cannot place in slot', slotId);
+                return;
+            }
+            const role = missionRoles.find(r => r.id == slotId);
+            if (role.qbit) {
+                console.log('📱 Slot already filled:', slotId);
+                return;
+            }
+            
+            console.log('📱 Placing Qbit in slot:', slotId, selectedQbit.name);
+            
+            const isBorrowed = !isOwnQbit(selectedQbit);
+            role.qbit = selectedQbit;
+
+            // Item 8: track network Qbit selection into slot (distinct from deploy event)
+            if (isBorrowed) {
+                window.trackEvent?.('network_qbit_selected', {
+                    qbit_id: String(selectedQbit.id),
+                    qbit_name: selectedQbit.name,
+                    owner_alias: selectedQbit.alias,
+                    slot_id: slotId,
+                    mode: mode
+                });
+            }
+
+            // Track Qbit deployment with mode
+            window.trackEvent?.('continuum_qbit_deployed', { 
+              qbit_name: selectedQbit.name, 
+              slot_id: slotId,
+              owner_alias: selectedQbit.alias,
+              borrowed: isBorrowed,
+              mode: mode
+            });
+            
+            // Track Qbit selection in slot
+            if (window.MaigiclyAnalytics) {
+                window.MaigiclyAnalytics.track({ 
+                    event_name: 'continuum_qbit_select', 
+                    properties: { 
+                        qbit_name: selectedQbit.name, 
+                        slot_id: slotId,
+                        borrowed: isBorrowed 
+                    } 
+                });
+            }
+            
+            selectedQbit = null;
+            renderSlots();
+            renderInventory();
+            
+            // Trigger appropriate animation based on ownership
+            if (isBorrowed) {
+                triggerBorrowedPulse(slotId);
+            } else {
+                triggerSlotPulse(slotId);
+            }
+        }, event);
+    }
+    
+    function triggerSlotPulse(slotId) {
+        const slot = document.getElementById(`slot-${slotId}`);
+        if (slot) {
+            slot.classList.add('just-filled');
+            setTimeout(() => slot.classList.remove('just-filled'), 300);
+        }
+    }
+    
+    function triggerBorrowedPulse(slotId) {
+        const slot = document.getElementById(`slot-${slotId}`);
+        if (slot) {
+            slot.classList.add('borrowed-pulse');
+            setTimeout(() => slot.classList.remove('borrowed-pulse'), 400);
+        }
+    }
+
+    function updateVisuals() {
+        const r1 = missionRoles[0];
+        const r2 = missionRoles[1];
+        document.getElementById('emitter-1').className = `beam-emitter ${r1.qbit ? 'active' : ''}`;
+        document.getElementById('emitter-2').className = `beam-emitter ${r2.qbit ? 'active' : ''}`;
+    }
+
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("qbitId", ev.target.id); }
+    function drop(ev) {
+        ev.preventDefault();
+        const qbitId = ev.dataTransfer.getData("qbitId");
+        const qbit = playerQbits.find(q => 'qbit-' + String(q.id) === qbitId);
+        if (!qbit) return;
+        
+        const slotEl = ev.target.closest('.slot');
+        if (!slotEl) return;
+        
+        const slotId = slotEl.id.split('-')[1];
+        const role = missionRoles.find(r => r.id == slotId);
+        
+        missionRoles.forEach(r => { if (r.qbit && String(r.qbit.id) === String(qbit.id)) r.qbit = null; });
+        
+        const isBorrowed = !isOwnQbit(qbit);
+        role.qbit = qbit;
+        renderSlots();
+        renderInventory();
+        
+        // Trigger appropriate animation based on ownership
+        if (isBorrowed) {
+            triggerBorrowedPulse(slotId);
+        } else {
+            triggerSlotPulse(slotId);
+        }
+    }
+
+    function stuckRoleForHint() {
+        // The role the player is stuck on: the first slot that is empty or
+        // holds a Qbit that does not satisfy the role. Falls back to the
+        // first role when every slot currently satisfies (hint still paid).
+        for (const r of missionRoles) {
+            if (!r.qbit || !roleSatisfiedBy(r, r.qbit.capabilityTags || [])) return r;
+        }
+        return missionRoles[0] || null;
+    }
+
+    function hintMessageForRole(role) {
+        // Names the needed TAGS for the stuck role, never a Qbit to use.
+        // (Tags are revealed on slots and cards by this same hint.)
+        if (!role) return "Deploy Qbits with matching Capability Tags (e.g., 'phase-lock').";
+        const tags = Array.isArray(role.reqAll) ? role.reqAll : (role.req || []);
+        const need = Array.isArray(role.reqAll)
+            ? tags.join(' + ') + ' together on one Qbit'
+            : tags.join(' / ');
+        return `Role "${role.name}" needs: ${need}. Deploy a Qbit carrying those Capability Tags.`;
+    }
+
+    function askNetworkHint() {
+        const msg = hintMessageForRole(stuckRoleForHint());
+        if (hintUsedForChallenge) {
+            // Already paid for this challenge: show the hint again, free.
+            document.getElementById('hintText').innerText = msg;
+            document.getElementById('hintModal').classList.remove('hidden');
+            return;
+        }
+        if (points > 15) {
+            points -= 15;
+            updateStats(true);
+            hintUsedForChallenge = true;
+            document.getElementById('hintText').innerText = msg;
+            document.getElementById('hintModal').classList.remove('hidden');
+            renderInventory(); // reveal the "Use in <role>" hints for this challenge
+            renderSlots(); // reveal tag labels on slots for this challenge
+        } else {
+            alert("Not enough integrity!");
+        }
+    }
+
+    // Item 7: guard against duplicate completion events per mission per session
+    const completedMissions = new Set();
+
+    function validateSolution() {
+        // Item 7: disable button immediately to prevent double-fire on rapid taps
+        const deployBtn = document.getElementById('deployBtn');
+        if (deployBtn) deployBtn.disabled = true;
+
+        if (missionRoles.some(r => !r.qbit)) {
+            alert("Fill all slots first.");
+            if (deployBtn) deployBtn.disabled = false;
+            return;
+        }
+        const valid = missionRoles.every(r => roleSatisfiedBy(r, (r.qbit.capabilityTags || [])));
+
+        if (valid) {
+            clearInterval(syncInterval);
+            appendNetworkCreditLines();
+            fireBeams(100, 1.0);
+            // deployBtn stays disabled — mission is over
+        } else {
+            points -= 15; updateStats(true);
+            const fb = document.getElementById('validationFeedback');
+            fb.classList.remove('hidden');
+            fb.innerHTML = `<div class="bg-red-900/30 border border-red-500/50 text-red-400 p-3 rounded text-sm text-center">INCOMPATIBLE CONFIGURATION. -15 SYNC</div>`;
+            setTimeout(() => fb.classList.add('hidden'), 3000);
+            
+            // Re-enable button on failure so player can try again
+            if (deployBtn) deployBtn.disabled = false;
+
+            if (window.MaigiclyAnalytics) {
+                window.MaigiclyAnalytics.track({ event_name: 'continuum_validation_failed' });
+            }
+        }
+
+        // Meta interpretation of the slotted pair (fire-and-forget; never
+        // changes local scoring). Skipped for local-fallback missions (no
+        // challenge id) and demo Qbits without database ids.
+        requestMetaFeedback();
+    }
+
+    function hasRealDbId(qbit) {
+        if (!qbit || qbit.demo === true || qbit.id === undefined || qbit.id === null) return false;
+        return typeof qbit.id === 'number' || (typeof qbit.id === 'string' && /^[0-9]+$/.test(qbit.id));
+    }
+
+    function showMetaFeedback(feedback, passed) {
+        const fb = document.getElementById('validationFeedback');
+        if (!fb) return;
+        if (passed) fb.replaceChildren();
+        const div = document.createElement('div');
+        div.setAttribute('data-meta-feedback', '1');
+        div.className = 'bg-cyan-900/30 border border-cyan-500/50 text-cyan-200 p-3 rounded text-sm text-center mt-2';
+        div.textContent = feedback;
+        fb.appendChild(div);
+        fb.classList.remove('hidden');
+        // A previous failure's auto-hide may still fire; re-assert visibility.
+        setTimeout(() => { if (fb.querySelector('[data-meta-feedback]')) fb.classList.remove('hidden'); }, 3200);
+    }
+
+    function slotSignature() {
+        return missionRoles.map(r => r.qbit ? String(r.qbit.id) : '').join('|');
+    }
+
+    async function requestMetaFeedback() {
+        try {
+            if (!currentChallengeId || !playerId) return;
+            if (missionRoles.length !== 2 || !missionRoles.every(r => r.qbit && hasRealDbId(r.qbit))) return;
+            // Tag this request: discard the response if a new challenge
+            // loaded or the slots changed while it was in flight.
+            const requestChallengeId = currentChallengeId;
+            const requestSlotsSig = slotSignature();
+            const isStale = () =>
+                requestChallengeId !== currentChallengeId || requestSlotsSig !== slotSignature();
+            const res = await fetch('/api/continuum/attempts/interpret', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    challenge_id: requestChallengeId,
+                    architect_id: playerId,
+                    assigned_qbit_ids: missionRoles.map(r => r.qbit.id)
+                })
+            });
+            if (isStale()) return;
+            const fb = document.getElementById('validationFeedback');
+            if (res.status === 410) {
+                let message = 'This challenge has faded from the Continuum.';
+                try {
+                    const body = await res.json();
+                    if (body && body.message) message = body.message;
+                } catch (_) { /* keep default */ }
+                // A faded Invent request gets its own line and a fresh
+                // challenge (hackathon step 15).
+                try {
+                    const stored = loadStoredInventChallenge();
+                    if (stored && stored.id === requestChallengeId) {
+                        message = 'That request faded. The Continuum has a new one.';
+                        setInventBanner(null);
+                    }
+                } catch (_) { /* keep default */ }
+                if (isStale()) return;
+                if (fb) {
+                    fb.replaceChildren();
+                    const div = document.createElement('div');
+                    div.className = 'bg-purple-900/30 border border-purple-500/50 text-purple-300 p-3 rounded text-sm text-center';
+                    div.textContent = message;
+                    fb.appendChild(div);
+                    fb.classList.remove('hidden');
+                }
+                await new Promise(r => setTimeout(r, 2000));
+                if (requestChallengeId !== currentChallengeId) return;
+                await chooseAndLoadMission();
+                return;
+            }
+            if (!res.ok) {
+                console.warn('[Continuum] interpret unavailable:', res.status);
+                return;
+            }
+            const data = await res.json();
+            if (isStale()) return;
+            if (!data || typeof data.feedback !== 'string') return;
+            showMetaFeedback(data.feedback, data.passed);
+        } catch (err) {
+            console.warn('[Continuum] interpret unavailable:', err);
+        }
+    }
+
+    function fireBeams(xpEarned, multiplier) {
+        const l1 = document.getElementById('laser-1'); const l2 = document.getElementById('laser-2');
+        const core = document.getElementById('core'); const w = document.getElementById('viewport').offsetWidth;
+        l1.style.opacity = 1; l1.style.width = (w/2 - 40) + 'px';
+        l2.style.opacity = 1; l2.style.width = (w/2 - 40) + 'px';
+        setTimeout(() => {
+            core.classList.add('stabilized');
+            setTimeout(() => {
+                showSuccessModal(xpEarned, multiplier);
+            }, 800);
+        }, 500);
+    }
+
+    function showSuccessModal(xpEarned, multiplier) {
+        const missionNumber = missionsCompleted + 1;
+
+        // Item 7: guard — only fire completion event once per mission number per session
+        if (completedMissions.has(missionNumber)) {
+            console.log('[continuum] duplicate completion blocked for mission', missionNumber);
+        } else {
+            completedMissions.add(missionNumber);
+
+            // Item 7: fire checkpoint immediately — not on exit — so completions are never lost on tab close
+            window.trackEvent?.('continuum_mission_checkpoint', {
+                mission_number: missionNumber,
+                points_remaining: points,
+                mode: mode,
+                missions_completed_so_far: completedMissions.size
+            });
+
+            if (window.MaigiclyAnalytics) {
+                window.MaigiclyAnalytics.track({
+                    event_name: 'continuum_mission_complete',
+                    properties: { mission_number: missionNumber, points: xpEarned }
+                });
+            }
+        }
+
+        // Persist Continuum Score to localStorage
+        const newTotal = ContinuumScore.addPoints(xpEarned);
+        
+        const inventLine = currentMode === 'invent'
+            ? '<div class="text-sm text-purple-300 mt-3">New capability detected. The network can now do what it could not before. Your invention changed what is possible.</div>'
+            : '';
+        document.getElementById('successDetails').innerHTML = `
+            <div class="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-6 rounded border border-cyan-500/30 mt-4">
+                <div class="text-xs uppercase tracking-widest text-cyan-400 mb-2">MISSION COMPLETE</div>
+                <div class="text-4xl font-bold text-white mb-1">+${xpEarned} XP</div>
+                <div class="text-sm text-yellow-400 mt-2">Continuum Score: ${newTotal}</div>
+                ${inventLine}
+            </div>`;
+        document.getElementById('successModal').classList.remove('hidden');
+        missionsCompleted++; totalPointsEarned += xpEarned; updateStats();
+    }
+
+    async function nextMission() {
+        if (missionsCompleted >= 5) {
+            alert("SIMULATION COMPLETE. RETURNING TO BASE.");
+            window.location.href = "/resonance.html";
+            return;
+        }
+
+        points = 100;
+        document.getElementById('successModal').classList.add('hidden');
+        document.getElementById('core').classList.remove('stabilized');
+        document.getElementById('laser-1').style.width = 0;
+        document.getElementById('laser-2').style.width = 0;
+        updateStats();
+        
+        await chooseAndLoadMission();
+        startEntropy();
+    }
+
+    function updateStats(flash = false) {
+        const pEl = document.getElementById('points');
+        pEl.textContent = points;
+        if(flash) {
+            pEl.style.color = '#ff4444';
+            setTimeout(() => { pEl.style.color = '#00f3ff'; }, 300);
+        }
+        document.getElementById('missionCount').textContent = missionsCompleted;
+    }
+
+    // Thinking stage (hackathon step 17): analysis lines type into the
+    // Mission Parameters box first, then fade out as the mission appears.
+    let analysisTimers = [];
+    let lastAnalysisLines = [];
+    let savedMissionView = null;
+
+    function prefersReducedMotion() {
+        try {
+            return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        } catch (_) { return false; }
+    }
+
+    const MISSION_VIEW_IDS = ['missionDesc', 'missionSource', 'replayAnalysisLink', 'levelMessage',
+        'roleSlots', 'rewardsNotice', 'missionActions', 'validationFeedback', 'inventBanner'];
+
+    function showThinkingView() {
+        savedMissionView = { hidden: {}, title: '' };
+        const titleEl = document.getElementById('missionTitle');
+        if (titleEl) {
+            savedMissionView.title = titleEl.textContent;
+            titleEl.textContent = 'THE CONTINUUM IS THINKING ...';
+        }
+        for (const id of MISSION_VIEW_IDS) {
+            const el = document.getElementById(id);
+            if (el) {
+                savedMissionView.hidden[id] = el.classList.contains('hidden');
+                el.classList.add('hidden');
+            }
+        }
+        const box = document.getElementById('thinkingLines');
+        if (box) {
+            box.classList.remove('hidden');
+            box.style.opacity = '1';
+        }
+    }
+
+    function showMissionView() {
+        const box = document.getElementById('thinkingLines');
+        if (box) box.classList.add('hidden');
+        const titleEl = document.getElementById('missionTitle');
+        if (titleEl && savedMissionView) titleEl.textContent = savedMissionView.title;
+        for (const id of ['missionDesc', 'missionSource', 'roleSlots', 'missionActions']) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        }
+        for (const id of ['levelMessage', 'rewardsNotice', 'validationFeedback', 'inventBanner']) {
+            const el = document.getElementById(id);
+            if (el && savedMissionView) el.classList.toggle('hidden', !!savedMissionView.hidden[id]);
+        }
+        const replay = document.getElementById('replayAnalysisLink');
+        if (replay) replay.classList.toggle('hidden', lastAnalysisLines.length === 0);
+    }
+
+    // Type analysis lines one at a time (~400 ms apart), textContent only,
+    // then fade out (~0.5 s) and call onDone. Reduced motion: all lines at
+    // once for 2 seconds, no typing, no fade.
+    function typeAnalysisLines(lines, onDone) {
+        const box = document.getElementById('thinkingLines');
+        for (const timer of analysisTimers) clearTimeout(timer);
+        analysisTimers = [];
+        const list = Array.isArray(lines) ? lines.filter(l => typeof l === 'string' && l) : [];
+        lastAnalysisLines = list.slice();
+        const done = typeof onDone === 'function' ? onDone : function () {};
+        if (!box) { done(); return; }
+        box.replaceChildren();
+        const reduced = prefersReducedMotion();
+        function appendLine(line) {
+            const p = document.createElement('p');
+            p.textContent = '> ' + line;
+            box.appendChild(p);
+            box.scrollTop = box.scrollHeight;
+        }
+        function finish() {
+            if (reduced || list.length === 0) {
+                box.classList.add('hidden');
+                done();
+                return;
+            }
+            box.style.opacity = '0';
+            analysisTimers.push(setTimeout(() => {
+                box.classList.add('hidden');
+                box.style.opacity = '1';
+                done();
+            }, 500));
+        }
+        if (reduced) {
+            for (const line of list) appendLine(line);
+            if (list.length === 0) { finish(); return; }
+            analysisTimers.push(setTimeout(finish, 2000));
+            return;
+        }
+        if (list.length === 0) { finish(); return; }
+        list.forEach((line, index) => {
+            analysisTimers.push(setTimeout(() => {
+                if (!box.isConnected) return;
+                appendLine(line);
+                if (index === list.length - 1) finish();
+            }, 400 * (index + 1)));
+        });
+    }
+
+    // Replay link under the source line: replays the stored analysis in
+    // the same box (hackathon step 17).
+    (function wireReplayLink() {
+        const replay = document.getElementById('replayAnalysisLink');
+        if (!replay) return;
+        replay.addEventListener('click', () => {
+            if (lastAnalysisLines.length === 0) return;
+            showThinkingView();
+            typeAnalysisLines(lastAnalysisLines, () => showMissionView());
+        });
+    })();
+
+    // After a correct solution, credit each used Qbit borrowed from the
+    // network pool in the mission box result area (hackathon step 17).
+    function appendNetworkCreditLines() {
+        const fb = document.getElementById('validationFeedback');
+        if (!fb) return;
+        for (const role of missionRoles) {
+            if (!role.qbit || isOwnQbit(role.qbit)) continue;
+            const p = document.createElement('p');
+            p.textContent = `> ${role.qbit.name}, forged by another Operator, solved this with you.`;
+            fb.appendChild(p);
+        }
+    }
+
+    // Item 7: Use sendBeacon for exit event — async fetch on beforeunload is unreliable on tab close.
+    // pagehide fires on iOS Safari and covers cases where beforeunload doesn't.
+    function _sendContinuumExit() {
+        const payload = JSON.stringify({
+            event_type: 'continuum_exit',
+            missions_completed: completedMissions.size,
+            time_spent_seconds: Math.floor((Date.now() - sessionStart) / 1000),
+            final_points: points,
+            mode: mode,
+            architect_id: window.ArchitectID?.get?.() || localStorage.getItem('maigicly_architect_id') || null
+        });
+        navigator.sendBeacon('/api/track-event', payload);
+    }
+    let _exitFired = false;
+    window.addEventListener('beforeunload', () => {
+        if (!_exitFired) { _exitFired = true; _sendContinuumExit(); }
+    });
+    window.addEventListener('pagehide', () => {
+        if (!_exitFired) { _exitFired = true; _sendContinuumExit(); }
+    });
+</script>
+
+</div><!-- #app-container -->
+  <script src="/js/system-map.js"></script>
+</body>
+</html>

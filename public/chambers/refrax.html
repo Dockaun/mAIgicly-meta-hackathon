@@ -1,0 +1,289 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <link rel="preload" href="/assets/chambers/refrax_panel.webp" as="image" type="image/webp">
+  <title>Refrax Chamber</title>
+  <script defer src="/js/global-points.js?v=2"></script>
+  <script defer src="/js/operator-id.js"></script>
+  <script defer src="/js/analytics.js?v=3"></script>
+  <script defer src="/js/chamber-completion.js?v=1"></script>
+  <script defer src="/js/star-rating.js"></script>
+  <script defer src="/js/continuum-unlock.js"></script>
+  <script defer src="/js/drag-copy-fix.js"></script>
+  <style>
+    :root {
+      --glass-surface: rgba(10, 20, 40, 0.75);
+      --glass-border: rgba(0, 243, 255, 0.3);
+      --panel: var(--glass-surface);
+      --card: rgba(17, 26, 42, 0.6);
+      --line: rgba(87, 211, 255, 0.15);
+      --text: #ffffff;
+      --accent: #7dd3fc;
+      --good: #34d399;
+    }
+
+    *{box-sizing:border-box} html{height:100%;background:#05070d} body{min-height:100%}
+
+    body {
+      margin:0; color:var(--text);
+      font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      padding-top: constant(safe-area-inset-top);
+      padding-top: env(safe-area-inset-top);
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.4)),
+        linear-gradient(to bottom, rgba(125, 211, 252, 0.05), rgba(125, 211, 252, 0.02)),
+        url("/assets/chambers/refrax_panel.webp") center/cover no-repeat;
+      background-blend-mode: multiply;
+      background-attachment:fixed;
+    }
+
+    header {
+      width: 100%;
+      border-bottom:1px solid var(--glass-border);
+      background: linear-gradient(180deg, rgba(10,20,40,0.9), rgba(10,20,40,0.6));
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      position: relative; z-index: 10;
+    }
+
+    .header-inner {
+      max-width: 1120px; margin: 0 auto; padding: 18px 16px;
+      display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;
+    }
+
+    header h1{font-size:20px; margin:0; letter-spacing:-0.01em; text-shadow:0 0 10px rgba(0,243,255,0.3);}
+
+    .stats{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .pill{background:rgba(17,26,42,0.8);border:1px solid var(--line);padding:6px 10px;border-radius:999px;display:flex;gap:8px;align-items:center}
+    .btn{cursor:pointer;background:var(--accent);color:#062231;border:0;border-radius:10px;padding:8px 12px;font-weight:600}
+    .ghost{background:transparent;color:#fff;border:1px solid var(--line)}
+
+    .wrap{
+      width:100%; max-width:1120px;
+      margin:40px auto 60px auto; padding:0 16px;
+      display:grid; grid-template-columns:320px 1fr; gap:20px;
+      position:relative; z-index:5;
+    }
+
+    .panel {
+      background: var(--glass-surface);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    h2{font-size:16px;margin:0 0 10px 0;color:#fff}
+    h2 span{color:var(--accent);opacity:0.8;margin-right:4px;}
+    .copy, .muted, .desc{color:#e0f2fe; line-height:1.45;}
+
+    .elements{font-family:ui-monospace,Menlo,monospace;font-size:14px;color:#7dd3fc;margin:4px 0 8px 0;}
+
+    /* Comic container */
+    .comic-container{
+      background:rgba(10,20,40,0.6);
+      border:1px solid var(--glass-border);
+      border-radius:14px;
+      padding:8px;
+    }
+    .comic-container video{
+      display:block;
+      width:100%;
+      height:auto;
+      max-height:383px;
+      object-fit:contain;
+      border-radius:10px;
+    }
+
+    /* Mods */
+    .mods{display:flex;gap:10px;flex-wrap:wrap}
+    .mod{position:relative;user-select:none;cursor:grab;background:var(--card);border:1px dashed var(--line);
+      padding:10px 12px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;color:#fff}
+    .mod b{font-family:ui-monospace,Menlo,monospace;color:var(--accent);}
+
+    /* Parts grid */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+    .part{
+      min-height:110px;
+      background:radial-gradient(120% 120% at 20% 0%, rgba(16,27,51,0.8) 0%, rgba(13,21,42,0.9) 100%);
+      border:1px solid var(--line);border-radius:12px;padding:12px;position:relative;
+      text-align:center;
+    }
+    .part h3{font-size:15px;margin:0 0 6px;color:#fff}
+    .part.done{outline:2px solid var(--good)}
+    .mini{margin-top:8px;background:rgba(15,24,48,0.5);border:1px solid var(--line);border-radius:10px;padding:8px}
+
+    .row{display:flex;gap:8px;align-items:center}
+    .track{flex:1;height:18px;border:1px solid var(--line);border-radius:999px;position:relative;background:#0c1426}
+    .band{position:absolute;top:3px;bottom:3px;background:rgba(125,211,252,.18);border-radius:999px}
+    .marker{position:absolute;top:-6px;width:2px;height:30px;background:#b9d4ff}
+    #nudgeRow{overflow-x:auto}
+    #nudgeRow .track{width:100%;min-width:160px;margin-top:8px}
+    .bar{height:10px;background:#0c1426;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .fill{height:100%;width:0;background:var(--good)}
+
+    /* Tooltips */
+    .mod.tip[data-tip]::after, .part.tip[data-tip]::after {
+      content:attr(data-tip); position:absolute; left:50%; bottom:110%;
+      transform:translate(-50%,-4px); background:#0b1630; color:#fff; border:1px solid #3b4e7a;
+      padding:6px 8px; border-radius:8px; font-size:12px; line-height:1.25;
+      max-width:240px; text-align:center; white-space:normal; z-index:50;
+      box-shadow:0 6px 16px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
+    }
+    .mod.tip[data-tip]::before, .part.tip[data-tip]::before {
+      content:""; position:absolute; left:50%; bottom:106%; transform:translateX(-50%);
+      border:6px solid transparent; border-top-color:#3b4e7a; opacity:0; transition:opacity .15s;
+    }
+    .mod.tip[data-tip]:hover::after, .mod.tip[data-tip]:hover::before,
+    .part.tip[data-tip]:hover::after, .part.tip[data-tip]:hover::before {
+      opacity:1; transform:translate(-50%,-8px);
+    }
+    .tip:not(.mod):not(.part)[data-tip]::after, .tip:not(.mod):not(.part)[data-tip]::before{content:none !important;}
+
+    /* Scanline overlay */
+    body::after {
+      content:""; position:fixed; inset:0;
+      background:repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px);
+      backdrop-filter:blur(4px);
+      pointer-events:none; z-index:1;
+    }
+    .wrap, header, .panel{position:relative; z-index:5;}
+
+    /* Light streak */
+    .wrap::before {
+      content:""; position:absolute; left:140px; top:-20px;
+      width:3px; height:120%;
+      background:linear-gradient(to bottom, transparent 0%, rgba(125,211,252,0.15) 30%, rgba(255,255,255,0.08) 50%, rgba(125,211,252,0.12) 70%, transparent 100%);
+      filter:blur(2px); pointer-events:none; z-index:0;
+    }
+
+    /* Shooting stars */
+    #star-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden;}
+    .star{position:absolute;width:150px;height:2px;
+      background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.8), rgba(255,255,255,0));
+      filter:drop-shadow(0 0 4px var(--accent));transform:rotate(-45deg);opacity:0;
+      animation:shoot 1.5s linear forwards;}
+    @keyframes shoot {
+      0%{transform:translateX(0) translateY(0) rotate(-45deg);opacity:1;}
+      100%{transform:translateX(-800px) translateY(800px) rotate(-45deg);opacity:0;}
+    }
+
+    @media (max-width:960px) {
+      body{background-attachment:scroll;}
+      body::after{backdrop-filter:blur(8px) saturate(90%);}
+      .wrap{grid-template-columns:1fr; gap:16px; margin:20px auto;}
+      .comic-container video{max-height:250px;}
+    }
+
+    @media (max-width:767px) {
+      .header-inner{padding:12px 14px;} header h1{font-size:16px;}
+      .stats{width:100%;justify-content:flex-start;}
+      .pill{font-size:14px;padding:5px 8px;}
+      .btn{padding:6px 10px;font-size:14px;min-height:44px;}
+      .wrap{margin:12px auto;padding:0 12px;}
+      .panel{padding:10px;}
+      .panel p{font-size:14px;line-height:1.35;}
+      .grid{grid-template-columns:repeat(3,1fr);gap:8px;}
+      .part{min-height:58px;padding:8px;}
+      .part h3{font-size:13px;margin:0;}
+      .mod{padding:8px 10px;min-height:44px;cursor:pointer;}
+      .mods{gap:8px;}
+      h2{font-size:15px;}
+      .copy{font-size:14px;line-height:1.35;}
+    }
+  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+  <div id="star-container"></div>
+
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Refrax Chamber</h1>
+        <p class="elements" style="margin:0;">Si (14), B (5)</p>
+      </div>
+      <div class="stats">
+        <span class="pill">Level: <b id="level">1</b></span>
+        <span class="pill">Points: <b id="points">0</b></span>
+        <a href="/resonance" class="btn ghost sysmap-header-btn" style="text-decoration:none;">0/9 Qbits online</a>
+        <a href="/completion-log.html" class="btn ghost" style="text-decoration:none;">Engineering Log</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- Left: Comics -->
+    <section class="panel">
+      <div class="comic-container">
+        <video id="comic1" autoplay muted playsinline>
+          <source src="/assets/comics/refrax/pg30.mp4" type="video/mp4">
+        </video>
+        <video id="comic2" muted playsinline loop style="display:none;">
+          <source src="/assets/comics/refrax/pg35.mp4" type="video/mp4">
+        </video>
+      </div>
+    </section>
+
+    <!-- Right: Mission + Parts + Mods -->
+    <section class="panel">
+      <h2><span>//</span> Mission</h2>
+      <p class="copy" style="margin-bottom:24px;">
+        I am Refrax. Reflector. Deflector.
+
+        A system fracture scattered my beam and blinded my sensors. Three critical parts remain damaged: Mirror, Laser, and Sensor.
+
+        Repair them to restore my signal and bring me back online.
+
+        I reflect outside stuff and sometimes inside stuff.
+      </p>
+
+      <div class="grid" id="chamber" style="margin-bottom:24px;"></div>
+
+      <h2 id="modsInstruction"><span>//</span> Mods: Tap and place the correct mod on its part.</h2>
+      <script>if(!('ontouchstart' in window)&&!navigator.maxTouchPoints){var _mi=document.getElementById('modsInstruction');if(_mi)_mi.innerHTML='<span>//</span> Mods: Tap and drag the correct mod on its part.';}</script>
+      <div class="mods" id="mods"></div>
+    </section>
+
+  </div>
+
+  <script type="module" src="./refrax.js?v=4"></script>
+
+  <script>
+    // Comic sequencing: pg30 plays for 8s, then pg35 loops
+    (function() {
+      const c1 = document.getElementById('comic1');
+      const c2 = document.getElementById('comic2');
+      setTimeout(function() {
+        c1.style.display = 'none';
+        c2.style.display = 'block';
+        c2.play().catch(function(){});
+      }, 8000);
+    })();
+
+    // Shooting stars
+    const container = document.getElementById('star-container');
+    function spawnStar() {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      star.style.left = (Math.random() * window.innerWidth + 200) + 'px';
+      star.style.top  = (Math.random() * (window.innerHeight / 2) - 200) + 'px';
+      const scale = 0.5 + Math.random();
+      star.style.transform = 'rotate(-45deg) scale(' + scale + ')';
+      container.appendChild(star);
+      setTimeout(function(){ star.remove(); }, 1500);
+    }
+    function loop() {
+      spawnStar();
+      setTimeout(loop, Math.random() * 4000 + 2000);
+    }
+    loop();
+  </script>
+
+  <script src="/js/system-map.js"></script>
+</body>
+</html>

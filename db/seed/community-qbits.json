@@ -1,0 +1,688 @@
+[
+  {
+    "name": "TwinStitch",
+    "role": "Coherence Stitching — keep waves in step",
+    "mission_id": "coherence_stitching",
+    "look": {
+      "mood": "focused",
+      "shape": "lattice",
+      "speed": "medium",
+      "colors": [
+        "teal",
+        "steel"
+      ],
+      "extras": [
+        "shimmer",
+        "trail",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "medium",
+      "thickness": "thin"
+    },
+    "parts": [
+      "field_mirror",
+      "coil_phase",
+      "hall_sensor"
+    ],
+    "fixes": [
+      "SH",
+      "F::"
+    ],
+    "boost": "N0",
+    "emblem": {
+      "boost": "N0",
+      "fixes": [
+        "SH",
+        "F::"
+      ],
+      "parts": [
+        "field_mirror",
+        "coil_phase",
+        "hall_sensor"
+      ],
+      "score": 0.9,
+      "effects": [],
+      "mission": "coherence_stitching"
+    },
+    "recipe": {
+      "mood": "focused",
+      "shape": "lattice",
+      "speed": "medium",
+      "colors": [
+        "teal",
+        "steel"
+      ],
+      "extras": [
+        "shimmer",
+        "trail",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "medium",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "coherence_stitching",
+      "thickness": "thin",
+      "timestamp": 1777768775210,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "EnergyWheel",
+    "role": "Energy Absorption — tame excess into calm",
+    "mission_id": "energy_absorption",
+    "look": {
+      "mood": "energetic",
+      "shape": "vortex",
+      "speed": "slow",
+      "colors": [
+        "gold",
+        "orange"
+      ],
+      "extras": [
+        "halo",
+        "glow",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "high",
+      "thickness": "thin"
+    },
+    "parts": [
+      "choice_buffer",
+      "delay_gate",
+      "light_catcher"
+    ],
+    "fixes": [
+      "SH",
+      "C//"
+    ],
+    "boost": "N0",
+    "emblem": {
+      "boost": "N0",
+      "fixes": [
+        "SH",
+        "C//"
+      ],
+      "parts": [
+        "choice_buffer",
+        "delay_gate",
+        "light_catcher"
+      ],
+      "score": 0.9,
+      "effects": [],
+      "mission": "energy_absorption"
+    },
+    "recipe": {
+      "mood": "energetic",
+      "shape": "vortex",
+      "speed": "slow",
+      "colors": [
+        "gold",
+        "orange"
+      ],
+      "extras": [
+        "halo",
+        "glow",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "high",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "energy_absorption",
+      "thickness": "thin",
+      "timestamp": 1777770373688,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "InTune",
+    "role": "Harmonic Tuning — make vibrations sing as one",
+    "mission_id": "harmonic_tuning",
+    "look": {
+      "mood": "calm",
+      "shape": "wave",
+      "speed": "fast",
+      "colors": [
+        "indigo",
+        "cyan"
+      ],
+      "extras": [
+        "trail",
+        "halo",
+        "gradient pulse"
+      ],
+      "motion": "pulse",
+      "symmetry": "high",
+      "thickness": "medium"
+    },
+    "parts": [
+      "shimmer_splitter",
+      "phase_prism",
+      "readout"
+    ],
+    "fixes": [
+      "F::",
+      "C//"
+    ],
+    "boost": "PH~",
+    "emblem": {
+      "boost": "PH~",
+      "fixes": [
+        "F::",
+        "C//"
+      ],
+      "parts": [
+        "shimmer_splitter",
+        "phase_prism",
+        "readout"
+      ],
+      "score": 0.9,
+      "effects": [],
+      "mission": "harmonic_tuning"
+    },
+    "recipe": {
+      "mood": "calm",
+      "shape": "wave",
+      "speed": "fast",
+      "colors": [
+        "indigo",
+        "cyan"
+      ],
+      "extras": [
+        "trail",
+        "halo",
+        "gradient pulse"
+      ],
+      "motion": "pulse",
+      "symmetry": "high",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "harmonic_tuning",
+      "thickness": "medium",
+      "timestamp": 1777840954497,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "Entangler",
+    "role": "Entanglement — distant channels act as one",
+    "mission_id": "entanglement",
+    "look": {
+      "mood": "lively",
+      "shape": "twin",
+      "speed": "medium",
+      "colors": [
+        "magenta",
+        "violet"
+      ],
+      "extras": [
+        "trail",
+        "shimmer",
+        "glow"
+      ],
+      "motion": "drift",
+      "symmetry": "medium",
+      "thickness": "extra-thick"
+    },
+    "parts": [
+      "shimmer_splitter",
+      "phase_prism",
+      "readout"
+    ],
+    "fixes": [
+      "F::",
+      "SH"
+    ],
+    "boost": "EN≡",
+    "emblem": {
+      "boost": "EN≡",
+      "fixes": [
+        "F::",
+        "SH"
+      ],
+      "parts": [
+        "shimmer_splitter",
+        "phase_prism",
+        "readout"
+      ],
+      "score": 0.66,
+      "effects": [],
+      "mission": "entanglement"
+    },
+    "recipe": {
+      "mood": "lively",
+      "shape": "twin",
+      "speed": "medium",
+      "colors": [
+        "magenta",
+        "violet"
+      ],
+      "extras": [
+        "trail",
+        "shimmer",
+        "glow"
+      ],
+      "motion": "drift",
+      "symmetry": "medium",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "entanglement",
+      "thickness": "extra-thick",
+      "timestamp": 1777841603722,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "TwinBraid",
+    "role": "Coherence Stitching — keep waves in step",
+    "mission_id": "coherence_stitching",
+    "look": {
+      "mood": "focused",
+      "shape": "lattice",
+      "speed": "medium",
+      "colors": [
+        "teal",
+        "steel"
+      ],
+      "extras": [
+        "shimmer",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "medium",
+      "thickness": "thin"
+    },
+    "parts": [
+      "field_mirror",
+      "coil_phase",
+      "hall_sensor"
+    ],
+    "fixes": [
+      "SH"
+    ],
+    "boost": "N0",
+    "emblem": {
+      "boost": "N0",
+      "fixes": [
+        "SH"
+      ],
+      "parts": [
+        "field_mirror",
+        "coil_phase",
+        "hall_sensor"
+      ],
+      "score": 0.66,
+      "effects": [],
+      "mission": "coherence_stitching"
+    },
+    "recipe": {
+      "mood": "focused",
+      "shape": "lattice",
+      "speed": "medium",
+      "colors": [
+        "teal",
+        "steel"
+      ],
+      "extras": [
+        "shimmer",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "medium",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "coherence_stitching",
+      "thickness": "thin",
+      "timestamp": 1777842038926,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "EnergyWheel",
+    "role": "Energy Absorption — tame excess into calm",
+    "mission_id": "energy_absorption",
+    "look": {
+      "mood": "energetic",
+      "shape": "vortex",
+      "speed": "slow",
+      "colors": [
+        "gold",
+        "orange"
+      ],
+      "extras": [
+        "halo",
+        "glow",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "high",
+      "thickness": "thin"
+    },
+    "parts": [
+      "choice_buffer",
+      "delay_gate",
+      "light_catcher"
+    ],
+    "fixes": [
+      "SH",
+      "C//"
+    ],
+    "boost": "N0",
+    "emblem": {
+      "boost": "N0",
+      "fixes": [
+        "SH",
+        "C//"
+      ],
+      "parts": [
+        "choice_buffer",
+        "delay_gate",
+        "light_catcher"
+      ],
+      "score": 0.9,
+      "effects": [],
+      "mission": "energy_absorption"
+    },
+    "recipe": {
+      "mood": "energetic",
+      "shape": "vortex",
+      "speed": "slow",
+      "colors": [
+        "gold",
+        "orange"
+      ],
+      "extras": [
+        "halo",
+        "glow",
+        "sparkle"
+      ],
+      "motion": "vibrate",
+      "symmetry": "high",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "energy_absorption",
+      "thickness": "thin",
+      "timestamp": 1777842280694,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "TheVoid",
+    "role": "Stealth / Masking — hide the signal in plain sight",
+    "mission_id": "stealth_masking",
+    "look": {
+      "mood": "mysterious",
+      "shape": "veil",
+      "speed": "medium",
+      "colors": [
+        "steel",
+        "ice"
+      ],
+      "extras": [
+        "glow",
+        "sparkle",
+        "trail"
+      ],
+      "motion": "expand",
+      "symmetry": "radial",
+      "thickness": "medium"
+    },
+    "parts": [
+      "shimmer_splitter",
+      "phase_prism",
+      "light_catcher"
+    ],
+    "fixes": [
+      "F::",
+      "C//"
+    ],
+    "boost": "G0",
+    "emblem": {
+      "boost": "G0",
+      "fixes": [
+        "F::",
+        "C//"
+      ],
+      "parts": [
+        "shimmer_splitter",
+        "phase_prism",
+        "light_catcher"
+      ],
+      "score": 0.9,
+      "effects": [],
+      "mission": "stealth_masking"
+    },
+    "recipe": {
+      "mood": "mysterious",
+      "shape": "veil",
+      "speed": "medium",
+      "colors": [
+        "steel",
+        "ice"
+      ],
+      "extras": [
+        "glow",
+        "sparkle",
+        "trail"
+      ],
+      "motion": "expand",
+      "symmetry": "radial",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "stealth_masking",
+      "thickness": "medium",
+      "timestamp": 1777842375773,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": false,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": false
+      }
+    },
+    "mechanism": ""
+  },
+  {
+    "name": "Bagel",
+    "role": "Harmonic Tuning — make vibrations sing as one",
+    "mission_id": "harmonic_tuning",
+    "look": {
+      "mood": "calm",
+      "shape": "wave",
+      "speed": "medium",
+      "colors": [
+        "indigo",
+        "cyan"
+      ],
+      "extras": [
+        "trail"
+      ],
+      "motion": "expand",
+      "symmetry": "radial",
+      "thickness": "medium"
+    },
+    "parts": [
+      "coil_phase",
+      "hall_sensor",
+      "field_mirror"
+    ],
+    "fixes": [
+      "F::"
+    ],
+    "boost": "G0",
+    "emblem": {
+      "boost": "G0",
+      "fixes": [
+        "F::"
+      ],
+      "parts": [
+        "coil_phase",
+        "hall_sensor",
+        "field_mirror"
+      ],
+      "score": 0.4066666666666667,
+      "effects": [],
+      "mission": "harmonic_tuning"
+    },
+    "recipe": {
+      "mood": "calm",
+      "shape": "wave",
+      "speed": "medium",
+      "colors": [
+        "indigo",
+        "cyan"
+      ],
+      "extras": [
+        "trail"
+      ],
+      "motion": "expand",
+      "symmetry": "radial",
+      "fxSliders": {
+        "hue": 0,
+        "glow": 0.35,
+        "read": 0.6,
+        "angle": 30,
+        "phase": 0,
+        "stability": 0.6
+      },
+      "missionId": "harmonic_tuning",
+      "thickness": "medium",
+      "timestamp": 1781958209796,
+      "funToggles": {
+        "echo": false,
+        "links": false,
+        "rings": true,
+        "toxic": false,
+        "chroma": false,
+        "golden": false,
+        "crystal": false,
+        "thermal": false,
+        "sparkles": false,
+        "vignette": true
+      }
+    },
+    "mechanism": "aligns the timing — breaks when timing slips — like a tuning fork"
+  }
+]

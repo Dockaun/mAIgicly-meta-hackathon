@@ -1,0 +1,18 @@
+.env
+.env.*
+*.dump
+*.sql
+*.zip
+*.tar
+*.tar.gz
+node_modules/
+.data/
+attached_assets/
+comic/
+exports/
+
+# Allow version-controlled schema (hackathon)
+!db/schema.sql
+
+# Comic pages (webp) are part of the game
+!public/comic/

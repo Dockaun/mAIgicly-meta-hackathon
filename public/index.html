@@ -1,0 +1,579 @@
+<!-- © 2026 mAIgicly. All rights reserved. Proprietary software. Unauthorized copying, modification, or distribution is prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mAIgicly</title>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/architect-id.js"></script>
+  <script src="/js/operator-id.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: radial-gradient(ellipse at 50% 0%, #0a1628 0%, #040810 50%, #000000 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 10vh;
+      min-height: 100vh;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    @media (min-width: 769px) {
+      body { background: transparent; }
+    }
+
+    /* ── Keyframes ─────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes titleBreathe {
+      0%, 100% { filter: drop-shadow(0 0 3px rgba(125,211,252,0.1)); }
+      50%       { filter: drop-shadow(0 0 14px rgba(125,211,252,0.32)); }
+    }
+    @keyframes btnBreathe {
+      0%, 100% { box-shadow: 0 0 6px rgba(125,211,252,0.06), inset 0 0 0 transparent; }
+      50%       { box-shadow: 0 0 20px rgba(125,211,252,0.18), inset 0 0 12px rgba(125,211,252,0.04); }
+    }
+    @keyframes drift {
+      0%   { opacity: 0; transform: translateY(100vh); }
+      10%  { opacity: 0.25; }
+      90%  { opacity: 0.08; }
+      100% { opacity: 0; transform: translateY(-10vh); }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.05; }
+      50%       { opacity: 0.35; }
+    }
+    @keyframes cometFly {
+      0%   { transform: translateX(0) translateY(0); opacity: 0; }
+      8%   { opacity: 1; }
+      88%  { opacity: 0.55; }
+      100% { transform: translateX(-68vw) translateY(26vh); opacity: 0; }
+    }
+    @keyframes mutterFade {
+      0%, 100% { opacity: 0; }
+      20%, 80% { opacity: 1; }
+    }
+
+    /* ── Particles / stars ─────────────────────────────────── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      border-radius: 50%;
+      background: #7dd3fc;
+      opacity: 0;
+      animation: drift linear infinite;
+    }
+    .star-fixed {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle ease-in-out infinite;
+    }
+
+    /* ── Comets ────────────────────────────────────────────── */
+    #comet-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .comet {
+      position: absolute;
+      height: 1px;
+      pointer-events: none;
+      background: linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(200,235,255,0.75) 100%);
+      filter: blur(0.4px);
+      transform-origin: right center;
+      animation: cometFly linear forwards;
+    }
+
+    /* ── Staged reveal: mission copy ───────────────────────── */
+    .landing-copy {
+      max-width: 520px;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 10;
+      opacity: 0;
+      animation: fadeIn 1.4s ease forwards 1.0s;
+    }
+    .copy-mission {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: clamp(1.05rem, 2.2vw, 1.18rem);
+      color: #e8f4ff;
+      line-height: 2.2;
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      text-align: center;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 2px 12px rgba(0,0,0,1),
+        0 4px 32px rgba(0,0,0,0.95),
+        0 0 60px rgba(0,0,0,0.8);
+    }
+    @media (max-width: 768px) {
+      .landing-copy { padding: 0 28px; }
+      body { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 16px); }
+    }
+
+    /* ── CTA block ─────────────────────────────────────────── */
+    #ctaBlock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      z-index: 10;
+      opacity: 0;
+      animation: fadeIn 1.4s ease forwards 3.2s;
+    }
+    .begin-restoration-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.22em;
+      background: rgba(0, 0, 0, 0.72);
+      color: #e8f7ff;
+      border: 1.5px solid rgba(125,211,252,0.8);
+      padding: 16px 48px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+      animation: btnBreathe 4s ease-in-out 5.1s infinite;
+      text-shadow: 0 0 14px rgba(125,211,252,0.6), 0 2px 8px rgba(0,0,0,0.9);
+    }
+    .begin-restoration-btn:hover {
+      background: rgba(0, 0, 0, 0.88);
+      border-color: #7dd3fc;
+      box-shadow: 0 0 32px rgba(125,211,252,0.35), 0 0 8px rgba(125,211,252,0.15);
+    }
+    .begin-restoration-btn:active { transform: scale(0.98); }
+
+    /* ── Returning link ────────────────────────────────────── */
+    .returning-link {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      letter-spacing: 0.14em;
+      color: rgba(125,211,252,0.87);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(125,211,252,0.35);
+      padding-bottom: 2px;
+      margin-top: 6px;
+      display: inline-block;
+      transition: color 0.2s, border-color 0.2s;
+      text-shadow: 0 1px 10px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,0.9);
+    }
+    .returning-link:hover {
+      color: rgba(125,211,252,0.95);
+      border-color: rgba(125,211,252,0.55);
+    }
+    @media (max-width: 768px) {
+      .returning-link { margin-top: 18px; font-size: 15px; padding: 8px 0; }
+    }
+
+    /* ── Init overlay ──────────────────────────────────────── */
+    .init-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.85);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+    }
+    .init-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .init-text {
+      text-align: center;
+      padding: 32px 40px;
+      border: 1px solid rgba(140,200,255,0.2);
+      border-radius: 14px;
+      background: rgba(8,12,20,0.8);
+      box-shadow: 0 0 60px rgba(120,220,255,0.1);
+    }
+    .init-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      color: rgba(125,211,252,0.7);
+      margin-bottom: 12px;
+    }
+    .init-sub {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Nav / footer ──────────────────────────────────────── */
+    .nav-links {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    .nav-link {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.25);
+      text-decoration: none;
+      border: 0.5px solid rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-link:hover {
+      color: rgba(255,255,255,0.6);
+      border-color: rgba(255,255,255,0.25);
+    }
+    .site-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 10px;
+      color: rgba(255,255,255,0.62);
+      font-size: 12px;
+      line-height: 1.6;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.06em;
+    }
+    @media (max-width: 768px) {
+      .site-footer { font-size: 11px; }
+    }
+    .mutter {
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      color: rgba(125, 211, 252, 0.55);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: mutterFade 6s ease-in-out infinite;
+      z-index: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    /* ── Video background ───────────────────────────────────── */
+    #bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      opacity: 1;
+      filter: none;
+      mix-blend-mode: normal;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* ── Dark overlay for readability ───────────────────────── */
+    #landing-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Reduced motion: show everything at once ───────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .site-title,
+      .landing-copy,
+      #ctaBlock {
+        opacity: 1 !important;
+        animation: none !important;
+      }
+      .begin-restoration-btn {
+        animation: none !important;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+  <!-- TEMP PREVIEW BUTTON — remove after review -->
+
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source id="bgVideoSrc" src="/assets/landing_pc.mp4" type="video/mp4">
+  </video>
+  <div id="landing-overlay"></div>
+
+  <div class="particles" id="particles"></div>
+  <div id="comet-layer"></div>
+
+  <div class="landing-copy">
+    <p class="copy-mission">An ancient quantum computer has gone dark.<br>It powered a universe of endless possibilities.<br>Restore it and discover what you can create.</p>
+  </div>
+
+  <div id="ctaBlock">
+    <button id="entryOrb" class="begin-restoration-btn">BEGIN RESTORATION</button>
+    <a href="#" id="returningLink" class="returning-link">I&rsquo;ve been here before &middot; enter my Operator Code</a>
+  </div>
+
+  <footer class="site-footer">
+    © 2026 mAIgicly &middot; Makeosity, Inc. &middot; AI powered by Meta Muse Spark &middot; Built with Muse Code &middot; All rights reserved.
+  </footer>
+
+  <script>
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ── Background video: swap source for mobile ────────────
+    (function() {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        const src = document.getElementById('bgVideoSrc');
+        src.src = '/assets/landing_mobile.mp4';
+        document.getElementById('bg-video').load();
+      }
+    })();
+
+    // ── Rising particles (existing star field) ──────────────
+    (function() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDelay = Math.random() * 14 + 's';
+        p.style.animationDuration = (13 + Math.random() * 9) + 's';
+        container.appendChild(p);
+      }
+      // Fixed twinkle stars
+      for (let i = 0; i < 40; i++) {
+        const s = document.createElement('div');
+        s.className = 'star-fixed';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top  = Math.random() * 100 + '%';
+        s.style.animationDelay    = Math.random() * 8 + 's';
+        s.style.animationDuration = (4 + Math.random() * 6) + 's';
+        container.appendChild(s);
+      }
+    })();
+
+    // ── Comet streaks ───────────────────────────────────────
+    if (!prefersReduced) {
+      const cometLayer = document.getElementById('comet-layer');
+
+      function spawnComet() {
+        const comet = document.createElement('div');
+        comet.className = 'comet';
+        const topPct  = 4 + Math.random() * 52;
+        const width   = 80 + Math.random() * 60;
+        const dur     = 2.8 + Math.random() * 1.6;
+        comet.style.top              = topPct + 'vh';
+        comet.style.right            = '-' + (width + 10) + 'px';
+        comet.style.width            = width + 'px';
+        comet.style.transform        = 'rotate(-17deg)';
+        comet.style.animationDuration = dur + 's';
+        cometLayer.appendChild(comet);
+        comet.addEventListener('animationend', () => comet.remove(), { once: true });
+        scheduleComet();
+      }
+
+      function scheduleComet() {
+        setTimeout(spawnComet, 6000 + Math.random() * 7000);
+      }
+
+      // First comet after a short initial delay
+      setTimeout(spawnComet, 3500 + Math.random() * 3000);
+    }
+
+    // ── Button click → save-your-code gate (new players, once) → resonance.html ──
+    function proceedToEntry() {
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        window.location.href = '/resonance.html';
+        return;
+      }
+      const isMobile = window.innerWidth <= 768;
+      const introSrc = isMobile
+        ? '/videos/quantum-moon-mobile.mp4'
+        : '/videos/quantum-moon-intro.mp4';
+
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;';
+
+      const vid = document.createElement('video');
+      vid.src = introSrc;
+      vid.autoplay = true;
+      vid.muted = false;
+      vid.playsinline = true;
+      vid.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+
+      vid.addEventListener('ended', () => {
+        window.location.href = '/resonance.html';
+      });
+      vid.addEventListener('error', () => {
+        window.location.href = '/resonance.html';
+      });
+
+      overlay.appendChild(vid);
+
+      const skipBtn = document.createElement('button');
+      skipBtn.textContent = 'SKIP';
+      const isMobileSkip = window.innerWidth <= 768;
+      skipBtn.style.cssText = 'position:absolute;top:max(20px, env(safe-area-inset-top));z-index:10;font-family:"Share Tech Mono",monospace;font-size:0.62rem;letter-spacing:0.18em;background:rgba(0,0,0,0.35);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.18);padding:6px 14px;border-radius:4px;cursor:pointer;' + (isMobileSkip ? 'left:50%;transform:translateX(-50%);' : 'right:24px;');
+      skipBtn.addEventListener('click', () => { window.location.href = '/resonance.html'; });
+      overlay.appendChild(skipBtn);
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', () => {
+        window.location.href = '/resonance.html';
+      });
+    }
+
+    document.getElementById('entryOrb').addEventListener('click', function() {
+      if (window.OperatorID && window.OperatorID.showSaveGate) {
+        window.OperatorID.showSaveGate({ onConfirmed: proceedToEntry });
+        return;
+      }
+      proceedToEntry();
+    });
+
+    if (window.MaigiclyAnalytics) {
+      window.MaigiclyAnalytics.track({ event_name: 'landing_load' });
+    }
+
+    // ── Returning player flow ───────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('returningLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('opReturnOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('opReturnInput').focus(), 80);
+      });
+
+      document.getElementById('opReturnOverlay').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+
+      document.getElementById('opReturnBtn').addEventListener('click', doLookup);
+      document.getElementById('opReturnInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLookup();
+      });
+    });
+
+    let _returnAttempts = 0;
+
+    async function doLookup() {
+      const val   = document.getElementById('opReturnInput').value.trim().toUpperCase();
+      const errEl = document.getElementById('opReturnError');
+      if (!val) { errEl.textContent = 'Please enter your Operator ID.'; return; }
+      errEl.style.color = 'rgba(125,211,252,0.6)';
+      errEl.textContent = 'Looking up...';
+      const data = window.OperatorID
+        ? await window.OperatorID.lookup(val)
+        : await fetch('/api/operator-id/' + encodeURIComponent(val)).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (data && data.architect_id) {
+        // Step 19: Qbits forged under this browser's pre-restore id would be
+        // orphaned by the swap below; migrate them to the restored id so the
+        // guide counts the same Qbits the Continuum shows.
+        let previousArchitectId = null;
+        try { previousArchitectId = localStorage.getItem('maigicly_architect_id'); } catch (e) {}
+        localStorage.setItem('maigicly_architect_id', data.architect_id);
+        localStorage.setItem('operator_id', val);
+        // Restored players proved they know the code: skip the save gate.
+        if (window.OperatorID) window.OperatorID.markRestored();
+        errEl.style.color = '#4ade80';
+        errEl.textContent = 'Found! Loading your session...';
+        const migrateDone = (previousArchitectId && previousArchitectId !== data.architect_id)
+          ? fetch('/api/restore-migrate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                operator_id: val,
+                from_architect_id: previousArchitectId,
+                to_architect_id: data.architect_id,
+              }),
+            }).then(r => r.ok ? r.json() : null).catch(() => null)
+          : Promise.resolve(null);
+        // Pull unlock/points progress back into this browser before continuing.
+        // Qbits, Continuum Qbits, and level follow architect_id automatically.
+        const go = () => migrateDone.then(
+          () => setTimeout(() => window.location.href = '/resonance.html', 900),
+          () => setTimeout(() => window.location.href = '/resonance.html', 900),
+        );
+        if (window.OperatorID && window.OperatorID.fetchProgress) {
+          window.OperatorID.fetchProgress(data.architect_id).then(flags => {
+            try {
+              for (const [key, value] of Object.entries(flags || {})) {
+                if (/^(refrax|magnetica|chrona|violetflicker)\.v3\.complete$/.test(key) ||
+                    key === 'quantum.global.points' ||
+                    /^quantum\.chamber\.(refrax|magnetica|chrona|violetflicker)\.earned$/.test(key)) {
+                  localStorage.setItem(key, String(value));
+                }
+              }
+            } catch (e) {}
+            go();
+          });
+        } else {
+          go();
+        }
+      } else {
+        _returnAttempts++;
+        if (_returnAttempts >= 2) {
+          // Two strikes — stop, close modal, return to landing with message
+          document.getElementById('opReturnOverlay').style.display = 'none';
+          _returnAttempts = 0;
+          const msgEl = document.getElementById('returningLink');
+          if (msgEl) {
+            msgEl.style.color = 'rgba(248,113,113,0.7)';
+            msgEl.style.pointerEvents = 'none';
+            msgEl.textContent = 'Signal not recognized. Start a new journey or try again later.';
+          }
+        } else {
+          errEl.style.color = '#f87171';
+          errEl.textContent = 'ID not found — double-check spelling and try once more.';
+          document.getElementById('opReturnInput').select();
+        }
+      }
+    }
+  </script>
+
+  <!-- Returning player modal -->
+  <div id="opReturnOverlay" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);">
+    <div style="background:#08101e;border:1px solid rgba(125,211,252,0.3);border-radius:16px;padding:36px 40px;max-width:400px;width:90%;text-align:center;font-family:'Share Tech Mono',monospace;box-shadow:0 0 60px rgba(125,211,252,0.12);">
+      <div style="font-size:0.6rem;letter-spacing:0.35em;color:rgba(125,211,252,0.55);margin-bottom:20px;">RETURNING OPERATOR</div>
+      <input id="opReturnInput" type="text" placeholder="e.g. SPARK 7742" autocomplete="off" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(125,211,252,0.25);color:#7dd3fc;padding:12px 16px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:1rem;letter-spacing:0.1em;text-align:center;margin-bottom:14px;outline:none;text-transform:uppercase;" />
+      <button id="opReturnBtn" style="width:100%;background:#7dd3fc;border:none;color:#000b1e;padding:12px;border-radius:8px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:0.16em;font-weight:700;margin-bottom:16px;">ENTER</button>
+      <p id="opReturnError" style="font-size:0.65rem;min-height:1.2em;margin-bottom:14px;letter-spacing:0.06em;color:rgba(125,211,252,0.6);font-family:'Share Tech Mono',monospace;"></p>
+      <p style="font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:0.05em;font-family:'Rajdhani',sans-serif;line-height:1.6;">Two failed attempts will close this screen. Your progress is safe — no data is erased.</p>
+    </div>
+  </div>
+</body>
+</html>
