@@ -21,7 +21,7 @@ The problem is not a shortage of human imagination. It is how to make invention 
 
 mAIgicly is an imagination-to-invention environment for people of all ages. Its first world draws on quantum superposition: the idea that many possibilities can coexist before an outcome emerges. Superposition offers a metaphor for imagination: before an idea takes form, multiple possibilities remain open. Invention is the process of exploring those possibilities and giving one of them form.
 
-In mAIgicly, those possibilities become **Qbits**. *Qbit* is a term I invented for mAIgicly, not the scientific *qubit*. Qbits are fictional, quantum-inspired building blocks whose capabilities depend on how people construct them.
+In mAIgicly, those possibilities become **Qbits**. *Qbit* is a term I invented for mAIgicly, not the scientific *qubit*. Each Qbit is both an element and a quantum possibility: a piece of a broken quantum computer, built from real elements like silicon, nickel, or krypton, and powered by quantum behaviors like superposition and entanglement. Its capabilities depend on how people construct it.
 
 People restore a broken quantum computer, learn the capabilities of its Guardian Qbits, and invent their own Qbits in the Quantum Forge. When the computer is restored, it awakens as **the Continuum**, and a new relationship between human and artificial intelligence begins.
 
