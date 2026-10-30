@@ -4,7 +4,7 @@
 **Imagine. Explore. Experiment. Build. Discover.**
 
 **Try it:** https://maigicly.com
-**Demo video:** (link to come)
+**Demo video:** https://youtu.be/2_1XPJYBXdE
 **Meta Global AI Developer Hackathon, Indie track. Problem statement: Build for Your World.**
 
 ## The Problem
